@@ -256,7 +256,6 @@ struct ngx_module_s {
     uintptr_t             spare_hook7;
 };
 
-
 typedef struct {
     ngx_str_t             name;
     void               *(*create_conf)(ngx_cycle_t *cycle);

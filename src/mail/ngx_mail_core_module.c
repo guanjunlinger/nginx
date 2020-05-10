@@ -99,7 +99,6 @@ static ngx_mail_module_t  ngx_mail_core_module_ctx = {
     ngx_mail_core_merge_srv_conf           /* merge server configuration */
 };
 
-
 ngx_module_t  ngx_mail_core_module = {
     NGX_MODULE_V1,
     &ngx_mail_core_module_ctx,             /* module context */
