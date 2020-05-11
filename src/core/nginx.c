@@ -206,7 +206,7 @@ main(int argc, char *const *argv)
     if (ngx_strerror_init() != NGX_OK) {
         return 1;
     }
-
+   //解析nginx启动参数
     if (ngx_get_options(argc, argv) != NGX_OK) {
         return 1;
     }
@@ -226,7 +226,7 @@ main(int argc, char *const *argv)
 #if (NGX_PCRE)
     ngx_regex_init();
 #endif
-
+    //保存进程ID
     ngx_pid = ngx_getpid();
     ngx_parent = ngx_getppid();
 
@@ -244,20 +244,19 @@ main(int argc, char *const *argv)
      * init_cycle->log is required for signal handlers and
      * ngx_process_options()
      */
-
     ngx_memzero(&init_cycle, sizeof(ngx_cycle_t));
     init_cycle.log = log;
     ngx_cycle = &init_cycle;
-
+    //初始化内存池 
     init_cycle.pool = ngx_create_pool(1024, log);
     if (init_cycle.pool == NULL) {
         return 1;
     }
-
+    //ngx_argv保存命令行参数 
     if (ngx_save_argv(&init_cycle, argc, argv) != NGX_OK) {
         return 1;
     }
-
+    //初始化运行目录和配置目录
     if (ngx_process_options(&init_cycle) != NGX_OK) {
         return 1;
     }
@@ -279,15 +278,15 @@ main(int argc, char *const *argv)
      */
 
     ngx_slab_sizes_init();
-
+    //平滑升级时,通过nginx环境变量传递Socket信息
     if (ngx_add_inherited_sockets(&init_cycle) != NGX_OK) {
         return 1;
     }
-
+    //nginx内置模块的预初始化
     if (ngx_preinit_modules() != NGX_OK) {
         return 1;
     }
-
+    //解析nginx.conf的配置
     cycle = ngx_init_cycle(&init_cycle);
     if (cycle == NULL) {
         if (ngx_test_config) {

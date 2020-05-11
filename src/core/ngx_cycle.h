@@ -37,7 +37,9 @@ struct ngx_shm_zone_s {
 
 
 struct ngx_cycle_s {
+    //保留所有模块的配置信息
     void                  ****conf_ctx;
+    //内存池
     ngx_pool_t               *pool;
 
     ngx_log_t                *log;
@@ -55,14 +57,15 @@ struct ngx_cycle_s {
 
     ngx_queue_t               reusable_connections_queue;
     ngx_uint_t                reusable_connections_n;
-
+    //存放ngx_listening_t结构体
     ngx_array_t               listening;
+    //存放nginx操作的目录列表
     ngx_array_t               paths;
 
     ngx_array_t               config_dump;
     ngx_rbtree_t              config_dump_rbtree;
     ngx_rbtree_node_t         config_dump_sentinel;
-
+    //存放ngx_open_file_t结构体
     ngx_list_t                open_files;
     ngx_list_t                shared_memory;
 
@@ -77,7 +80,9 @@ struct ngx_cycle_s {
 
     ngx_str_t                 conf_file;
     ngx_str_t                 conf_param;
+    //配置文件目录
     ngx_str_t                 conf_prefix;
+    //nginx安装目录
     ngx_str_t                 prefix;
     ngx_str_t                 lock_file;
     ngx_str_t                 hostname;
@@ -121,7 +126,6 @@ typedef struct {
 
 
 #define ngx_is_init_cycle(cycle)  (cycle->conf_ctx == NULL)
-
 
 ngx_cycle_t *ngx_init_cycle(ngx_cycle_t *old_cycle);
 ngx_int_t ngx_create_pidfile(ngx_str_t *name, ngx_log_t *log);

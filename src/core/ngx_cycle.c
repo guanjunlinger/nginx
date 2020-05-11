@@ -604,7 +604,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 #endif
         }
     }
-
+   //初始化套接字,监听指定端口
     if (ngx_open_listening_sockets(cycle) != NGX_OK) {
         goto failed;
     }
