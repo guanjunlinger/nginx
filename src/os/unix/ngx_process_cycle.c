@@ -32,22 +32,26 @@ ngx_uint_t    ngx_process;
 ngx_uint_t    ngx_worker;
 ngx_pid_t     ngx_pid;
 ngx_pid_t     ngx_parent;
-
+//CHLD信号
 sig_atomic_t  ngx_reap;
 sig_atomic_t  ngx_sigio;
 sig_atomic_t  ngx_sigalrm;
+//TERM信号
 sig_atomic_t  ngx_terminate;
+//QUIT信号
 sig_atomic_t  ngx_quit;
 sig_atomic_t  ngx_debug_quit;
 ngx_uint_t    ngx_exiting;
+//HUP信号
 sig_atomic_t  ngx_reconfigure;
+//USR1信号
 sig_atomic_t  ngx_reopen;
-
+//USR2信号
 sig_atomic_t  ngx_change_binary;
 ngx_pid_t     ngx_new_binary;
 ngx_uint_t    ngx_inherited;
 ngx_uint_t    ngx_daemonized;
-
+//WINCH信号
 sig_atomic_t  ngx_noaccept;
 ngx_uint_t    ngx_noaccepting;
 ngx_uint_t    ngx_restart;
