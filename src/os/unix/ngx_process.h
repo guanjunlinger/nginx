@@ -23,7 +23,7 @@ typedef struct {
     ngx_pid_t           pid;
     //进程状态
     int                 status;
-    //socketpair系统调用,专用于父子进程通信
+    //专用于父子进程通信socket文件描述符
     ngx_socket_t        channel[2];
     //子进程循环执行方法
     ngx_spawn_proc_pt   proc;
