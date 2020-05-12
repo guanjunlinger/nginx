@@ -10,7 +10,7 @@
 #include <ngx_event.h>
 #include <ngx_channel.h>
 
-
+//nginx信号和handler结构体
 typedef struct {
     int     signo;
     char   *signame;
