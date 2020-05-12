@@ -1092,7 +1092,7 @@ ngx_signal_process(ngx_cycle_t *cycle, char *sig)
                       ngx_open_file_n " \"%s\" failed", file.name.data);
         return 1;
     }
-
+    //根据nginx pid文件获取master进程ID
     n = ngx_read_file(&file, buf, NGX_INT64_LEN + 2, 0);
 
     if (ngx_close_file(file.fd) == NGX_FILE_ERROR) {

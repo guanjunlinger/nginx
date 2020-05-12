@@ -252,7 +252,6 @@ main(int argc, char *const *argv)
     if (init_cycle.pool == NULL) {
         return 1;
     }
-    //ngx_argv保存命令行参数 
     if (ngx_save_argv(&init_cycle, argc, argv) != NGX_OK) {
         return 1;
     }
@@ -322,7 +321,7 @@ main(int argc, char *const *argv)
 
         return 0;
     }
-
+    //nginx -s命令行选项
     if (ngx_signal) {
         return ngx_signal_process(cycle, ngx_signal);
     }

@@ -10,7 +10,6 @@
 #include <ngx_event.h>
 #include <ngx_channel.h>
 
-//nginx信号和handler结构体
 typedef struct {
     int     signo;
     char   *signame;
@@ -37,7 +36,7 @@ ngx_int_t        ngx_last_process;
 //子进程数组
 ngx_process_t    ngx_processes[NGX_MAX_PROCESSES];
 
-
+//nginx支持的信号列表和对应的处理器
 ngx_signal_t  signals[] = {
     { ngx_signal_value(NGX_RECONFIGURE_SIGNAL),
       "SIG" ngx_value(NGX_RECONFIGURE_SIGNAL),
@@ -631,7 +630,7 @@ ngx_debug_point(void)
     }
 }
 
-
+//kill系统调用向进程发送信号
 ngx_int_t
 ngx_os_signal_process(ngx_cycle_t *cycle, char *name, ngx_pid_t pid)
 {
