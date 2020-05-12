@@ -29,10 +29,11 @@ static void ngx_unlock_mutexes(ngx_pid_t pid);
 int              ngx_argc;
 char           **ngx_argv;
 char           **ngx_os_argv;
-
+//当前操作进程的下标
 ngx_int_t        ngx_process_slot;
 ngx_socket_t     ngx_channel;
 ngx_int_t        ngx_last_process;
+//子进程数组
 ngx_process_t    ngx_processes[NGX_MAX_PROCESSES];
 
 

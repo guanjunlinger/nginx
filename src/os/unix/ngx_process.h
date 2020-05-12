@@ -21,17 +21,24 @@ typedef void (*ngx_spawn_proc_pt) (ngx_cycle_t *cycle, void *data);
 
 typedef struct {
     ngx_pid_t           pid;
+    //进程状态
     int                 status;
+    //socketpair系统调用,专用于父子进程通信
     ngx_socket_t        channel[2];
-
+    //子进程循环执行方法
     ngx_spawn_proc_pt   proc;
     void               *data;
+    //进程名
     char               *name;
-
+    //重新生成子进程
     unsigned            respawn:1;
+    //正在生成子进程
     unsigned            just_spawn:1;
+    //父子进程分离
     unsigned            detached:1;
+    //进程正在退出
     unsigned            exiting:1;
+    //进程已经退出
     unsigned            exited:1;
 } ngx_process_t;
 
