@@ -116,7 +116,7 @@ ngx_module_t  ngx_events_module = {
 
 static ngx_str_t  event_core_name = ngx_string("event_core");
 
-
+//event核心模块感兴趣的配置项
 static ngx_command_t  ngx_event_core_commands[] = {
 
     { ngx_string("worker_connections"),
@@ -622,7 +622,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
     ecf = ngx_event_get_conf(cycle->conf_ctx, ngx_event_core_module);
-
+    //负载均衡锁的开关判断
     if (ccf->master && ccf->worker_processes > 1 && ecf->accept_mutex) {
         ngx_use_accept_mutex = 1;
         ngx_accept_mutex_held = 0;
@@ -646,22 +646,22 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     ngx_queue_init(&ngx_posted_accept_events);
     ngx_queue_init(&ngx_posted_next_events);
     ngx_queue_init(&ngx_posted_events);
-
+    //初始化红黑树实现的定时器
     if (ngx_event_timer_init(cycle->log) == NGX_ERROR) {
         return NGX_ERROR;
     }
-
+    //启用use指令配置的事件模块
     for (m = 0; cycle->modules[m]; m++) {
         if (cycle->modules[m]->type != NGX_EVENT_MODULE) {
             continue;
         }
-
+       
         if (cycle->modules[m]->ctx_index != ecf->use) {
             continue;
         }
 
         module = cycle->modules[m]->ctx;
-
+      
         if (module->actions.init(cycle, ngx_timer_resolution) != NGX_OK) {
             /* fatal */
             exit(2);
@@ -671,7 +671,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     }
 
 #if !(NGX_WIN32)
-
+    //timer_resolution指令控制ngx_timer_signal_handler回调的间隔
     if (ngx_timer_resolution && !(ngx_event_flags & NGX_USE_TIMER_EVENT)) {
         struct sigaction  sa;
         struct itimerval  itv;
@@ -707,7 +707,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         }
 
         cycle->files_n = (ngx_uint_t) rlmt.rlim_cur;
-
+       //预分配连接指针数组
         cycle->files = ngx_calloc(sizeof(ngx_connection_t *) * cycle->files_n,
                                   cycle->log);
         if (cycle->files == NULL) {
@@ -725,7 +725,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     }
 
 #endif
-
+    //预分配连接池
     cycle->connections =
         ngx_alloc(sizeof(ngx_connection_t) * cycle->connection_n, cycle->log);
     if (cycle->connections == NULL) {
@@ -733,7 +733,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     }
 
     c = cycle->connections;
-
+    //预分配读事件数组
     cycle->read_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n,
                                    cycle->log);
     if (cycle->read_events == NULL) {
@@ -745,7 +745,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         rev[i].closed = 1;
         rev[i].instance = 1;
     }
-
+    //预分配写数组
     cycle->write_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n,
                                     cycle->log);
     if (cycle->write_events == NULL) {
@@ -863,7 +863,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         }
 
 #else
-
+        //设置监听事件处理器 
         rev->handler = (c->type == SOCK_STREAM) ? ngx_event_accept
                                                 : ngx_event_recvmsg;
 
@@ -898,7 +898,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         }
 
 #endif
-
+         //将监听连接的读事件添加到事件驱动模块
         if (ngx_add_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR) {
             return NGX_ERROR;
         }
@@ -960,7 +960,7 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     /* count the number of the event modules and set up their indices */
-
+    //为子模块分配index
     ngx_event_max_module = ngx_count_modules(cf->cycle, NGX_EVENT_MODULE);
 
     ctx = ngx_pcalloc(cf->pool, sizeof(void *));
@@ -981,7 +981,7 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
 
         m = cf->cycle->modules[i]->ctx;
-
+        //事件模块的create_conf回调 
         if (m->create_conf) {
             (*ctx)[cf->cycle->modules[i]->ctx_index] =
                                                      m->create_conf(cf->cycle);
@@ -995,7 +995,7 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     cf->ctx = ctx;
     cf->module_type = NGX_EVENT_MODULE;
     cf->cmd_type = NGX_EVENT_CONF;
-
+    //解析nginx.conf配置文件
     rv = ngx_conf_parse(cf, NULL);
 
     *cf = pcf;
@@ -1010,7 +1010,7 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
 
         m = cf->cycle->modules[i]->ctx;
-
+        //事件模块的init_conf回调 
         if (m->init_conf) {
             rv = m->init_conf(cf->cycle,
                               (*ctx)[cf->cycle->modules[i]->ctx_index]);

@@ -129,9 +129,11 @@ static void ngx_epoll_eventfd_handler(ngx_event_t *ev);
 
 static void *ngx_epoll_create_conf(ngx_cycle_t *cycle);
 static char *ngx_epoll_init_conf(ngx_cycle_t *cycle, void *conf);
-
+//epoll_create系统调用返回的标识符
 static int                  ep = -1;
+//epoll_wait系统调用时,存储内核复制的事件
 static struct epoll_event  *event_list;
+//epoll最多返回的事件数目
 static ngx_uint_t           nevents;
 
 #if (NGX_HAVE_EVENTFD)
@@ -157,14 +159,12 @@ ngx_uint_t                  ngx_use_epoll_rdhup;
 static ngx_str_t      epoll_name = ngx_string("epoll");
 
 static ngx_command_t  ngx_epoll_commands[] = {
-
     { ngx_string("epoll_events"),
       NGX_EVENT_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_num_slot,
       0,
       offsetof(ngx_epoll_conf_t, events),
       NULL },
-
     { ngx_string("worker_aio_requests"),
       NGX_EVENT_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_num_slot,
@@ -367,7 +367,7 @@ ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
     ngx_io = ngx_os_io;
 
     ngx_event_actions = ngx_epoll_module_ctx.actions;
-
+//epoll默认使用ET模式
 #if (NGX_HAVE_CLEAR_EVENT)
     ngx_event_flags = NGX_USE_CLEAR_EVENT
 #else

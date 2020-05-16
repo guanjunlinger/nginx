@@ -220,7 +220,9 @@
 
 
 struct ngx_module_s {
+    //nginx模块在同类型模块中的index
     ngx_uint_t            ctx_index;
+    //nginx模块的index
     ngx_uint_t            index;
 
     char                 *name;
@@ -233,6 +235,7 @@ struct ngx_module_s {
 
     void                 *ctx;
     ngx_command_t        *commands;
+    //nginx模块的类型
     ngx_uint_t            type;
 
     ngx_int_t           (*init_master)(ngx_log_t *log);

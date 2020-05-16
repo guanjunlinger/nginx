@@ -431,7 +431,9 @@ extern ngx_os_io_t  ngx_io;
 
 
 typedef struct {
+    //连接池大小
     ngx_uint_t    connections;
+    //当前模块在事件模块的序号
     ngx_uint_t    use;
 
     ngx_flag_t    multi_accept;
@@ -442,6 +444,7 @@ typedef struct {
     u_char       *name;
 
 #if (NGX_DEBUG)
+    //with-debug编译模式下,输出客户端连接的调试信息
     ngx_array_t   debug_connection;
 #endif
 } ngx_event_conf_t;
