@@ -48,6 +48,7 @@ struct ngx_cycle_s {
     ngx_uint_t                log_use_stderr;  /* unsigned  log_use_stderr:1; */
 
     ngx_connection_t        **files;
+    //空闲连接链表首元素
     ngx_connection_t         *free_connections;
     ngx_uint_t                free_connection_n;
 
@@ -71,7 +72,7 @@ struct ngx_cycle_s {
 
     ngx_uint_t                connection_n;
     ngx_uint_t                files_n;
-
+    //连接池链表头结点
     ngx_connection_t         *connections;
     ngx_event_t              *read_events;
     ngx_event_t              *write_events;

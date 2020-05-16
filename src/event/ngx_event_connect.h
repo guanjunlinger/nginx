@@ -32,14 +32,13 @@ typedef ngx_int_t (*ngx_event_set_peer_session_pt)(ngx_peer_connection_t *pc,
 typedef void (*ngx_event_save_peer_session_pt)(ngx_peer_connection_t *pc,
     void *data);
 
-
+//主动连接
 struct ngx_peer_connection_s {
     ngx_connection_t                *connection;
-
     struct sockaddr                 *sockaddr;
     socklen_t                        socklen;
     ngx_str_t                       *name;
-
+    //连接失败,重试次数
     ngx_uint_t                       tries;
     ngx_msec_t                       start_time;
 

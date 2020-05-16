@@ -120,21 +120,22 @@ typedef enum {
 #define NGX_SSL_BUFFERED       0x01
 #define NGX_HTTP_V2_BUFFERED   0x02
 
-
+//被动连接
 struct ngx_connection_s {
+    //连接使用时,由nginx模块赋予意义
     void               *data;
     ngx_event_t        *read;
     ngx_event_t        *write;
-
+    //套接字对应的文件描述符
     ngx_socket_t        fd;
-
+    //接受网络字符流的方法
     ngx_recv_pt         recv;
     ngx_send_pt         send;
     ngx_recv_chain_pt   recv_chain;
     ngx_send_chain_pt   send_chain;
-
+    //监听套接字元信息
     ngx_listening_t    *listening;
-
+    //连接已发送的字节数
     off_t               sent;
 
     ngx_log_t          *log;
@@ -157,17 +158,17 @@ struct ngx_connection_s {
 
     struct sockaddr    *local_sockaddr;
     socklen_t           local_socklen;
-
+    //缓存客户端的字符流
     ngx_buf_t          *buffer;
-
+    //可重用的连接
     ngx_queue_t         queue;
-
+    //连接被使用次数
     ngx_atomic_uint_t   number;
-
+    //处理的请求次数
     ngx_uint_t          requests;
-
+    //缓存中的业务类型
     unsigned            buffered:8;
-
+    //连接使用的日志级别
     unsigned            log_error:3;     /* ngx_connection_log_error_e */
 
     unsigned            timedout:1;
@@ -180,8 +181,11 @@ struct ngx_connection_s {
     unsigned            shared:1;
 
     unsigned            sendfile:1;
+    //套接字缓冲区满足最低阈值要求
     unsigned            sndlowat:1;
+    //TCP的nodelay特性
     unsigned            tcp_nodelay:2;   /* ngx_connection_tcp_nodelay_e */
+    //阻塞小数据包发送
     unsigned            tcp_nopush:2;    /* ngx_connection_tcp_nopush_e */
 
     unsigned            need_last_buf:1;
