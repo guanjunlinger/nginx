@@ -31,7 +31,7 @@ struct ngx_event_s {
     void            *data;
 
     unsigned         write:1;
-
+    
     unsigned         accept:1;
 
     /* used to detect the stale events in kqueue and epoll */
@@ -451,6 +451,7 @@ typedef struct {
 
     void                 *(*create_conf)(ngx_cycle_t *cycle);
     char                 *(*init_conf)(ngx_cycle_t *cycle, void *conf);
+    //event模块实现的10个抽象方法
     ngx_event_actions_t     actions;
 } ngx_event_module_t;
 

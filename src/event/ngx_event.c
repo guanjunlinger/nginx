@@ -264,7 +264,7 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
     ngx_event_process_posted(cycle, &ngx_posted_events);
 }
 
-
+//屏蔽底层事件机制的差异
 ngx_int_t
 ngx_handle_read_event(ngx_event_t *rev, ngx_uint_t flags)
 {
@@ -340,7 +340,7 @@ ngx_handle_write_event(ngx_event_t *wev, size_t lowat)
 
     if (lowat) {
         c = wev->data;
-
+        //检测套接字缓冲区大小;lowat =0 忽略检测
         if (ngx_send_lowat(c, lowat) == NGX_ERROR) {
             return NGX_ERROR;
         }
