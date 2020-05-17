@@ -475,7 +475,7 @@ ngx_conf_bitmask_t  ngx_http_upstream_ignore_headers_masks[] = {
     { ngx_null_string, 0 }
 };
 
-
+//初始化ngx_http_upstream_t结构体
 ngx_int_t
 ngx_http_upstream_create(ngx_http_request_t *r)
 {
@@ -525,7 +525,7 @@ ngx_http_upstream_init(ngx_http_request_t *r)
         return;
     }
 #endif
-
+    //移除读操作定时器 
     if (c->read->timer_set) {
         ngx_del_timer(c->read);
     }
@@ -610,6 +610,7 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
     u->store = u->conf->store;
 
     if (!u->store && !r->post_action && !u->conf->ignore_client_abort) {
+        //检测下游服务器连接状态
         r->read_event_handler = ngx_http_upstream_rd_check_broken_connection;
         r->write_event_handler = ngx_http_upstream_wr_check_broken_connection;
     }
@@ -672,7 +673,7 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
         ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
         return;
     }
-
+   
     cln->handler = ngx_http_upstream_cleanup;
     cln->data = r;
     u->cleanup = &cln->handler;

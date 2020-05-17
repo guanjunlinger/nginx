@@ -178,6 +178,7 @@ typedef struct {
     ngx_flag_t                       pass_request_body;
 
     ngx_flag_t                       ignore_client_abort;
+    //400以上错误码应用error-page机制
     ngx_flag_t                       intercept_errors;
     ngx_flag_t                       cyclic_temp_file;
     ngx_flag_t                       force_ranges;
@@ -185,6 +186,7 @@ typedef struct {
     ngx_path_t                      *temp_path;
 
     ngx_hash_t                       hide_headers_hash;
+    //隐藏的头部列表
     ngx_array_t                     *hide_headers;
     ngx_array_t                     *pass_headers;
 
@@ -222,6 +224,7 @@ typedef struct {
     signed                           cache:2;
 #endif
     signed                           store:2;
+    //404直接转发错误码
     unsigned                         intercept_404:1;
     unsigned                         change_buffering:1;
     unsigned                         pass_trailers:1;
@@ -319,7 +322,7 @@ typedef void (*ngx_http_upstream_handler_pt)(ngx_http_request_t *r,
 struct ngx_http_upstream_s {
     ngx_http_upstream_handler_pt     read_event_handler;
     ngx_http_upstream_handler_pt     write_event_handler;
-
+    //主动向上游服务器发送的连接
     ngx_peer_connection_t            peer;
 
     ngx_event_pipe_t                *pipe;
@@ -340,8 +343,9 @@ struct ngx_http_upstream_s {
     ngx_http_upstream_resolved_t    *resolved;
 
     ngx_buf_t                        from_client;
-
+    //接受上游服务响应包头的缓冲区
     ngx_buf_t                        buffer;
+    //上游服务器响应包体的长度
     off_t                            length;
 
     ngx_chain_t                     *out_bufs;
@@ -355,6 +359,7 @@ struct ngx_http_upstream_s {
 #if (NGX_HTTP_CACHE)
     ngx_int_t                      (*create_key)(ngx_http_request_t *r);
 #endif
+    //构造发往上游服务器的请求
     ngx_int_t                      (*create_request)(ngx_http_request_t *r);
     ngx_int_t                      (*reinit_request)(ngx_http_request_t *r);
     ngx_int_t                      (*process_header)(ngx_http_request_t *r);
