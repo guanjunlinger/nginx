@@ -22,17 +22,21 @@ typedef struct {
 
 
 typedef struct {
+//CAS操作实现互斥锁    
 #if (NGX_HAVE_ATOMIC_OPS)
     ngx_atomic_t  *lock;
+//信号量实现互斥锁    
 #if (NGX_HAVE_POSIX_SEM)
     ngx_atomic_t  *wait;
     ngx_uint_t     semaphore;
     sem_t          sem;
 #endif
 #else
+    //文件锁实现互斥锁
     ngx_fd_t       fd;
     u_char        *name;
 #endif
+    //自旋次数
     ngx_uint_t     spin;
 } ngx_shmtx_t;
 

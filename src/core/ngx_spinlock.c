@@ -18,7 +18,7 @@ ngx_spinlock(ngx_atomic_t *lock, ngx_atomic_int_t value, ngx_uint_t spin)
     ngx_uint_t  i, n;
 
     for ( ;; ) {
-
+        //锁没有被持有且CAS操作成功 
         if (*lock == 0 && ngx_atomic_cmp_set(lock, 0, value)) {
             return;
         }
@@ -28,6 +28,7 @@ ngx_spinlock(ngx_atomic_t *lock, ngx_atomic_int_t value, ngx_uint_t spin)
             for (n = 1; n < spin; n <<= 1) {
 
                 for (i = 0; i < n; i++) {
+                    //CPU置于节能状态
                     ngx_cpu_pause();
                 }
 
@@ -36,7 +37,7 @@ ngx_spinlock(ngx_atomic_t *lock, ngx_atomic_int_t value, ngx_uint_t spin)
                 }
             }
         }
-
+        //暂时让出CPU
         ngx_sched_yield();
     }
 
