@@ -105,23 +105,25 @@ typedef struct {
 
 
 typedef enum {
+    //接受完整的HTTP头部
     NGX_HTTP_POST_READ_PHASE = 0,
-
+   //URI与location表达式匹配前
     NGX_HTTP_SERVER_REWRITE_PHASE,
-
+   //根据URI寻找匹配的location块
     NGX_HTTP_FIND_CONFIG_PHASE,
+    //寻找匹配的URI之后,修改URI
     NGX_HTTP_REWRITE_PHASE,
+    //重写URI之后，防止死循环
     NGX_HTTP_POST_REWRITE_PHASE,
-
+    //在权限校验前.HTTP模块可以介入的阶段
     NGX_HTTP_PREACCESS_PHASE,
-
     NGX_HTTP_ACCESS_PHASE,
     NGX_HTTP_POST_ACCESS_PHASE,
 
     NGX_HTTP_PRECONTENT_PHASE,
-
+    //处理HTTP请求体的阶段
     NGX_HTTP_CONTENT_PHASE,
-
+    //请求处理完，日志记录阶段
     NGX_HTTP_LOG_PHASE
 } ngx_http_phases;
 
@@ -139,7 +141,9 @@ struct ngx_http_phase_handler_s {
 
 typedef struct {
     ngx_http_phase_handler_t  *handlers;
+    //NGX_HTTP_SERVER_REWRITE_PHASE,第一个ngx_http_handler_t方法的index
     ngx_uint_t                 server_rewrite_index;
+    //NGX_HTTP_REWRITE_PHASE阶段第一个ngx_http_handler_t方法的index
     ngx_uint_t                 location_rewrite_index;
 } ngx_http_phase_engine_t;
 
@@ -150,6 +154,7 @@ typedef struct {
 
 
 typedef struct {
+    //保存server块配置结构体的指针
     ngx_array_t                servers;         /* ngx_http_core_srv_conf_t */
 
     ngx_http_phase_engine_t    phase_engine;
@@ -185,7 +190,6 @@ typedef struct {
 
     u_char                     *file_name;
     ngx_uint_t                  line;
-
     ngx_str_t                   server_name;
 
     size_t                      connection_pool_size;
@@ -265,7 +269,9 @@ typedef struct {
 
 
 typedef struct {
+    //socket地址族
     ngx_int_t                  family;
+    //监听端口
     in_port_t                  port;
     ngx_array_t                addrs;     /* array of ngx_http_conf_addr_t */
 } ngx_http_conf_port_t;
@@ -298,6 +304,7 @@ typedef struct {
 
 
 struct ngx_http_core_loc_conf_s {
+    //location 定义的表达式
     ngx_str_t     name;          /* location name */
 
 #if (NGX_PCRE)
@@ -323,6 +330,7 @@ struct ngx_http_core_loc_conf_s {
 #endif
 
     /* pointer to the modules' loc_conf */
+    //所有模块create_loc_conf产生的结构体指针
     void        **loc_conf;
 
     uint32_t      limit_except;

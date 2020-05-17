@@ -370,7 +370,6 @@ typedef void (*ngx_http_event_handler_pt)(ngx_http_request_t *r);
 
 struct ngx_http_request_s {
     uint32_t                          signature;         /* "HTTP" */
-
     ngx_connection_t                 *connection;
 
     void                            **ctx;
@@ -475,7 +474,9 @@ struct ngx_http_request_s {
     unsigned                          add_uri_to_alias:1;
     unsigned                          valid_location:1;
     unsigned                          valid_unparsed_uri:1;
+    //URI重写标志位
     unsigned                          uri_changed:1;
+    //URI重写次数,初始为11
     unsigned                          uri_changes:4;
 
     unsigned                          request_body_in_single_buf:1;
