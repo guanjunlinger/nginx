@@ -52,8 +52,11 @@ ngx_atomic_t         *ngx_accept_mutex_ptr;
 ngx_shmtx_t           ngx_accept_mutex;
 ngx_uint_t            ngx_use_accept_mutex;
 ngx_uint_t            ngx_accept_events;
+//进程持有acctpt锁的标志位
 ngx_uint_t            ngx_accept_mutex_held;
+//accept锁的竞争延时
 ngx_msec_t            ngx_accept_mutex_delay;
+//nginx子进程负载均衡阈值
 ngx_int_t             ngx_accept_disabled;
 
 
@@ -216,6 +219,7 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
     }
 
     if (ngx_use_accept_mutex) {
+        //触发子进程负载均衡
         if (ngx_accept_disabled > 0) {
             ngx_accept_disabled--;
 
@@ -230,7 +234,7 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
             } else {
                 if (timer == NGX_TIMER_INFINITE
                     || timer > ngx_accept_mutex_delay)
-                {
+                { 
                     timer = ngx_accept_mutex_delay;
                 }
             }
@@ -250,21 +254,20 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                    "timer delta: %M", delta);
-
+    //执行ngx_posted_accept_events队列中的事件
     ngx_event_process_posted(cycle, &ngx_posted_accept_events);
 
     if (ngx_accept_mutex_held) {
         ngx_shmtx_unlock(&ngx_accept_mutex);
     }
-
+    //执行超时事件
     if (delta) {
         ngx_event_expire_timers();
     }
-
+    //执行ngx_posted_events队列中的事件
     ngx_event_process_posted(cycle, &ngx_posted_events);
 }
 
-//屏蔽底层事件机制的差异
 ngx_int_t
 ngx_handle_read_event(ngx_event_t *rev, ngx_uint_t flags)
 {
@@ -622,7 +625,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
     ecf = ngx_event_get_conf(cycle->conf_ctx, ngx_event_core_module);
-    //负载均衡锁的开关判断
+    //是否启用accept锁
     if (ccf->master && ccf->worker_processes > 1 && ecf->accept_mutex) {
         ngx_use_accept_mutex = 1;
         ngx_accept_mutex_held = 0;
@@ -671,7 +674,6 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     }
 
 #if !(NGX_WIN32)
-    //timer_resolution指令控制ngx_timer_signal_handler回调的间隔
     if (ngx_timer_resolution && !(ngx_event_flags & NGX_USE_TIMER_EVENT)) {
         struct sigaction  sa;
         struct itimerval  itv;
@@ -679,7 +681,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         ngx_memzero(&sa, sizeof(struct sigaction));
         sa.sa_handler = ngx_timer_signal_handler;
         sigemptyset(&sa.sa_mask);
-
+        //注册SIGALRM信号处理器 
         if (sigaction(SIGALRM, &sa, NULL) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           "sigaction(SIGALRM) failed");
@@ -690,7 +692,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         itv.it_interval.tv_usec = (ngx_timer_resolution % 1000) * 1000;
         itv.it_value.tv_sec = ngx_timer_resolution / 1000;
         itv.it_value.tv_usec = (ngx_timer_resolution % 1000 ) * 1000;
-
+        //定时向进程发送SIGALRM信号
         if (setitimer(ITIMER_REAL, &itv, NULL) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           "setitimer() failed");
@@ -707,7 +709,6 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         }
 
         cycle->files_n = (ngx_uint_t) rlmt.rlim_cur;
-       //预分配连接指针数组
         cycle->files = ngx_calloc(sizeof(ngx_connection_t *) * cycle->files_n,
                                   cycle->log);
         if (cycle->files == NULL) {
@@ -898,7 +899,6 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         }
 
 #endif
-         //将监听连接的读事件添加到事件驱动模块
         if (ngx_add_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR) {
             return NGX_ERROR;
         }

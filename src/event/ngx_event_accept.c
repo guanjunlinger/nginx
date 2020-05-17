@@ -32,6 +32,7 @@ ngx_event_accept(ngx_event_t *ev)
 #endif
 
     if (ev->timedout) {
+        //新连接注册读事件到IO多路复用器
         if (ngx_enable_accept_events((ngx_cycle_t *) ngx_cycle) != NGX_OK) {
             return;
         }
@@ -132,7 +133,7 @@ ngx_event_accept(ngx_event_t *ev)
 #if (NGX_STAT_STUB)
         (void) ngx_atomic_fetch_add(ngx_stat_accepted, 1);
 #endif
-
+        //设置负载均衡阈值 
         ngx_accept_disabled = ngx_cycle->connection_n / 8
                               - ngx_cycle->free_connection_n;
 
@@ -304,7 +305,7 @@ ngx_event_accept(ngx_event_t *ev)
 
         log->data = NULL;
         log->handler = NULL;
-
+        //执行ngx_listening_t的回调方法
         ls->handler(c);
 
         if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) {
@@ -317,12 +318,11 @@ ngx_event_accept(ngx_event_t *ev)
 
 ngx_int_t
 ngx_trylock_accept_mutex(ngx_cycle_t *cycle)
-{
+{   
     if (ngx_shmtx_trylock(&ngx_accept_mutex)) {
 
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                        "accept mutex locked");
-
         if (ngx_accept_mutex_held && ngx_accept_events == 0) {
             return NGX_OK;
         }

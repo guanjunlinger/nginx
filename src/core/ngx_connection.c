@@ -1142,7 +1142,7 @@ ngx_get_connection(ngx_socket_t s, ngx_log_t *log)
 
     ngx_memzero(rev, sizeof(ngx_event_t));
     ngx_memzero(wev, sizeof(ngx_event_t));
-
+    //每次获取连接将instance取反,处理过期事件 
     rev->instance = !instance;
     wev->instance = !instance;
 
