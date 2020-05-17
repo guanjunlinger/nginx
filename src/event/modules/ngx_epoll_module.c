@@ -13,11 +13,13 @@
 #if (NGX_TEST_BUILD_EPOLL)
 
 /* epoll declarations */
-
 #define EPOLLIN        0x001
+//TCP连接有紧急数据可读
 #define EPOLLPRI       0x002
 #define EPOLLOUT       0x004
+//TCP连接发生错误
 #define EPOLLERR       0x008
+//TCP连接被挂起
 #define EPOLLHUP       0x010
 #define EPOLLRDNORM    0x040
 #define EPOLLRDBAND    0x080
@@ -28,7 +30,9 @@
 #define EPOLLRDHUP     0x2000
 
 #define EPOLLEXCLUSIVE 0x10000000
+//事件仅处理一次
 #define EPOLLONESHOT   0x40000000
+//边缘触发
 #define EPOLLET        0x80000000
 
 #define EPOLL_CTL_ADD  1
@@ -367,7 +371,7 @@ ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
     ngx_io = ngx_os_io;
 
     ngx_event_actions = ngx_epoll_module_ctx.actions;
-//epoll默认使用ET模式
+
 #if (NGX_HAVE_CLEAR_EVENT)
     ngx_event_flags = NGX_USE_CLEAR_EVENT
 #else
@@ -602,7 +606,6 @@ ngx_epoll_add_event(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags)
         events = EPOLLOUT;
 #endif
     }
-
     if (e->active) {
         op = EPOLL_CTL_MOD;
         events |= prev;
@@ -800,7 +803,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
     events = epoll_wait(ep, event_list, (int) nevents, timer);
 
     err = (events == -1) ? ngx_errno : 0;
-
+    //nginx时间更新启动判断逻辑
     if (flags & NGX_UPDATE_TIME || ngx_event_timer_alarm) {
         ngx_time_update();
     }
@@ -835,7 +838,6 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 
     for (i = 0; i < events; i++) {
         c = event_list[i].data.ptr;
-
         instance = (uintptr_t) c & 1;
         c = (ngx_connection_t *) ((uintptr_t) c & (uintptr_t) ~1);
 
@@ -890,11 +892,11 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 
             rev->ready = 1;
             rev->available = -1;
-
+            //延时处理队列
             if (flags & NGX_POST_EVENTS) {
                 queue = rev->accept ? &ngx_posted_accept_events
                                     : &ngx_posted_events;
-
+                 
                 ngx_post_event(rev, queue);
 
             } else {
