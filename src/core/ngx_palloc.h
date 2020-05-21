@@ -26,13 +26,14 @@
     ngx_align((sizeof(ngx_pool_t) + 2 * sizeof(ngx_pool_large_t)),            \
               NGX_POOL_ALIGNMENT)
 
-
+//内存池回收的回调方法
 typedef void (*ngx_pool_cleanup_pt)(void *data);
 
 typedef struct ngx_pool_cleanup_s  ngx_pool_cleanup_t;
 
 struct ngx_pool_cleanup_s {
     ngx_pool_cleanup_pt   handler;
+    //回调方法需要的参数
     void                 *data;
     ngx_pool_cleanup_t   *next;
 };

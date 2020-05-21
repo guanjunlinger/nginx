@@ -75,11 +75,16 @@
 
 
 struct ngx_command_s {
+    //配置项名称
     ngx_str_t             name;
+    //配置项可以出现的位置
     ngx_uint_t            type;
+    //配置项的处理方法
     char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+    //配置项的偏移量
     ngx_uint_t            conf;
     ngx_uint_t            offset;
+    //ngx_conf_post_t结构指针,对配置项后处理
     void                 *post;
 };
 

@@ -17,6 +17,7 @@ typedef struct ngx_list_part_s  ngx_list_part_t;
 
 struct ngx_list_part_s {
     void             *elts;
+    //数组的元素个数
     ngx_uint_t        nelts;
     ngx_list_part_t  *next;
 };
@@ -25,7 +26,9 @@ struct ngx_list_part_s {
 typedef struct {
     ngx_list_part_t  *last;
     ngx_list_part_t   part;
+    //单个数组元素占用的空间
     size_t            size;
+    //数组的容量
     ngx_uint_t        nalloc;
     ngx_pool_t       *pool;
 } ngx_list_t;

@@ -220,9 +220,9 @@
 
 
 struct ngx_module_s {
-    //nginx模块在同类型模块中的index
+    //当前模块在同类型模块中的下标
     ngx_uint_t            ctx_index;
-    //nginx模块的index
+    //当前模块在ngx_modules数组中的下标
     ngx_uint_t            index;
 
     char                 *name;
@@ -232,16 +232,17 @@ struct ngx_module_s {
 
     ngx_uint_t            version;
     const char           *signature;
-
+    //某一类模块的上下文结构体
     void                 *ctx;
+    //模块感兴趣的配置项列表
     ngx_command_t        *commands;
     //nginx模块的类型
     ngx_uint_t            type;
 
     ngx_int_t           (*init_master)(ngx_log_t *log);
-
+    //启动wroker进程前回调
     ngx_int_t           (*init_module)(ngx_cycle_t *cycle);
-
+    //woroker进程初始化回调
     ngx_int_t           (*init_process)(ngx_cycle_t *cycle);
     ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);
     void                (*exit_thread)(ngx_cycle_t *cycle);

@@ -18,13 +18,16 @@ typedef void *            ngx_buf_tag_t;
 typedef struct ngx_buf_s  ngx_buf_t;
 
 struct ngx_buf_s {
+    //nginx需要处理的数据范围
     u_char          *pos;
     u_char          *last;
+    //处理文件的位置信息
     off_t            file_pos;
     off_t            file_last;
-
+    //缓冲区内存的地址信息
     u_char          *start;         /* start of buffer */
     u_char          *end;           /* end of buffer */
+    //缓冲区类型
     ngx_buf_tag_t    tag;
     ngx_file_t      *file;
     ngx_buf_t       *shadow;
@@ -55,7 +58,7 @@ struct ngx_buf_s {
     /* STUB */ int   num;
 };
 
-
+//元素是ngx_buf_t的单链表
 struct ngx_chain_s {
     ngx_buf_t    *buf;
     ngx_chain_t  *next;

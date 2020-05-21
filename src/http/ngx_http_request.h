@@ -179,8 +179,9 @@ typedef struct {
 
 
 typedef struct {
+    //ngx_table_elt_t元素组成的单链表
     ngx_list_t                        headers;
-
+    //保留常见的HTTP头
     ngx_table_elt_t                  *host;
     ngx_table_elt_t                  *connection;
     ngx_table_elt_t                  *if_modified_since;
@@ -238,8 +239,9 @@ typedef struct {
     ngx_str_t                         server;
     off_t                             content_length_n;
     time_t                            keep_alive_n;
-
+    //保持长连接标志位
     unsigned                          connection_type:2;
+    //浏览器标志位
     unsigned                          chunked:1;
     unsigned                          msie:1;
     unsigned                          msie6:1;
@@ -254,8 +256,9 @@ typedef struct {
 typedef struct {
     ngx_list_t                        headers;
     ngx_list_t                        trailers;
-
+    //状态码
     ngx_uint_t                        status;
+    //响应行
     ngx_str_t                         status_line;
 
     ngx_table_elt_t                  *server;
@@ -399,14 +402,16 @@ struct ngx_http_request_s {
     time_t                            lingering_time;
     time_t                            start_sec;
     ngx_msec_t                        start_msec;
-
+    //HTTP Method常量
     ngx_uint_t                        method;
     ngx_uint_t                        http_version;
 
     ngx_str_t                         request_line;
     ngx_str_t                         uri;
     ngx_str_t                         args;
+    //URI中的扩展名
     ngx_str_t                         exten;
+    //未解码前的URI
     ngx_str_t                         unparsed_uri;
 
     ngx_str_t                         method_name;
@@ -577,13 +582,16 @@ struct ngx_http_request_s {
      * a memory that can be reused after parsing a request line
      * via ngx_http_ephemeral_t
      */
-
+    //URI的首元素地址
     u_char                           *uri_start;
+    //URI尾元素的下一个元素地址
     u_char                           *uri_end;
     u_char                           *uri_ext;
     u_char                           *args_start;
+    //用户请求的首地址
     u_char                           *request_start;
     u_char                           *request_end;
+    //HTTP method的最后一个字符
     u_char                           *method_end;
     u_char                           *schema_start;
     u_char                           *schema_end;
