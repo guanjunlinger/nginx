@@ -81,11 +81,11 @@ struct ngx_command_s {
     ngx_uint_t            type;
     //配置项的处理方法
     char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
-    //当前配置项所在的配置结构体在复合配置结构体中的偏移量
+    //配置结构体的偏移量
     ngx_uint_t            conf;
     //当前配置项在配置结构体的偏移量
     ngx_uint_t            offset;
-    //一般是ngx_conf_post_t结构指针,对配置项后处理
+    //对配置项后处理,ngx_conf_post_t;ngx_conf_enum_t;ngx_conf_bitmask_t结构类型指针
     void                 *post;
 };
 
@@ -118,7 +118,6 @@ typedef struct {
 typedef char *(*ngx_conf_handler_pt)(ngx_conf_t *cf,
     ngx_command_t *dummy, void *conf);
 
-//原始配置项结构体
 struct ngx_conf_s {
     char                 *name;
     ngx_array_t          *args;
@@ -207,7 +206,7 @@ char *ngx_conf_check_num_bounds(ngx_conf_t *cf, void *post, void *data);
     if (conf == NGX_CONF_UNSET_MSEC) {                                       \
         conf = default;                                                      \
     }
-
+//合并直接用=赋值的变量
 #define ngx_conf_merge_value(conf, prev, default)                            \
     if (conf == NGX_CONF_UNSET) {                                            \
         conf = (prev == NGX_CONF_UNSET) ? default : prev;                    \
@@ -242,7 +241,7 @@ char *ngx_conf_check_num_bounds(ngx_conf_t *cf, void *post, void *data);
     if (conf == NGX_CONF_UNSET) {                                            \
         conf = (prev == NGX_CONF_UNSET) ? default : prev;                    \
     }
-
+//ngx_str_t类型参数合并
 #define ngx_conf_merge_str_value(conf, prev, default)                        \
     if (conf.data == NULL) {                                                 \
         if (prev.data) {                                                     \

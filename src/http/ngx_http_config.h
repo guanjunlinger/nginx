@@ -13,7 +13,6 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-
 typedef struct {
     void        **main_conf;
     void        **srv_conf;

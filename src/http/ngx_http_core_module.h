@@ -154,7 +154,6 @@ typedef struct {
 
 
 typedef struct {
-    //保存server块配置结构体的指针
     ngx_array_t                servers;         /* ngx_http_core_srv_conf_t */
 
     ngx_http_phase_engine_t    phase_engine;
