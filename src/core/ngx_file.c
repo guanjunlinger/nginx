@@ -356,7 +356,7 @@ ngx_next_temp_number(ngx_uint_t collision)
     return n + add;
 }
 
-
+//设置文件路径,同时校验文件权限
 char *
 ngx_conf_set_path_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -455,7 +455,7 @@ ngx_conf_merge_path_value(ngx_conf_t *cf, ngx_path_t **path, ngx_path_t *prev,
     return NGX_CONF_OK;
 }
 
-
+//携带1-3个参数;设置文件权限
 char *
 ngx_conf_set_access_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
