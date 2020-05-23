@@ -85,7 +85,7 @@ struct ngx_command_s {
     ngx_uint_t            conf;
     //当前配置项在配置结构体的偏移量
     ngx_uint_t            offset;
-    //ngx_conf_post_t结构指针,对配置项后处理
+    //一般是ngx_conf_post_t结构指针,对配置项后处理
     void                 *post;
 };
 
@@ -118,7 +118,7 @@ typedef struct {
 typedef char *(*ngx_conf_handler_pt)(ngx_conf_t *cf,
     ngx_command_t *dummy, void *conf);
 
-
+//原始配置项结构体
 struct ngx_conf_s {
     char                 *name;
     ngx_array_t          *args;

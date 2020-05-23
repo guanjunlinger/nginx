@@ -46,7 +46,6 @@ typedef struct {
 #define NGX_HTTP_LIF_CONF         0x40000000
 #define NGX_HTTP_LMT_CONF         0x80000000
 
-//获取HTTP配置项的首地址
 #define NGX_HTTP_MAIN_CONF_OFFSET  offsetof(ngx_http_conf_ctx_t, main_conf)
 #define NGX_HTTP_SRV_CONF_OFFSET   offsetof(ngx_http_conf_ctx_t, srv_conf)
 #define NGX_HTTP_LOC_CONF_OFFSET   offsetof(ngx_http_conf_ctx_t, loc_conf)

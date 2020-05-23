@@ -1021,7 +1021,7 @@ ngx_conf_log_error(ngx_uint_t level, ngx_conf_t *cf, ngx_err_t err,
                   cf->conf_file->file.name.data, cf->conf_file->line);
 }
 
-
+//配置项为ngx_flag_t类型,且配置项参数取值为on|off
 char *
 ngx_conf_set_flag_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1032,7 +1032,7 @@ ngx_conf_set_flag_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_conf_post_t  *post;
 
     fp = (ngx_flag_t *) (p + cmd->offset);
-
+    //默认取值-1,表示未解析
     if (*fp != NGX_CONF_UNSET) {
         return "is duplicate";
     }
@@ -1061,7 +1061,7 @@ ngx_conf_set_flag_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-
+//配置项参数为ngx_str_t类型,且只有一个参数
 char *
 ngx_conf_set_str_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1088,7 +1088,7 @@ ngx_conf_set_str_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-
+//配置项出现多次,且每个配置项后面都跟一个参数,参数类型为ngx_str_t
 char *
 ngx_conf_set_str_array_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1124,7 +1124,7 @@ ngx_conf_set_str_array_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-
+//配置项出现多次,且每个配置项后面都跟2个参数,参数类型为ngx_str_t
 char *
 ngx_conf_set_keyval_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1162,7 +1162,7 @@ ngx_conf_set_keyval_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-
+//配置项参数只有一个，且是ngx_int_t类型
 char *
 ngx_conf_set_num_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1193,7 +1193,7 @@ ngx_conf_set_num_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-
+//配置项只有一个参数,且参数必须为数字+单位结尾(表示存储空间大小)
 char *
 ngx_conf_set_size_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1225,6 +1225,7 @@ ngx_conf_set_size_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 }
 
 
+//配置项只有一个参数,且参数必须为数字+单位结尾(表示空间偏移量)
 char *
 ngx_conf_set_off_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1255,7 +1256,7 @@ ngx_conf_set_off_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-
+//配置项表示时间,以ms为单位表示
 char *
 ngx_conf_set_msec_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1286,7 +1287,7 @@ ngx_conf_set_msec_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-
+//配置项表示时间,以s为单位表示
 char *
 ngx_conf_set_sec_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1317,7 +1318,7 @@ ngx_conf_set_sec_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-
+//配置项携带两个参数,第一是数字，缓冲区个数,第二是缓冲区空间大小
 char *
 ngx_conf_set_bufs_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1347,7 +1348,7 @@ ngx_conf_set_bufs_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-
+//配置项携带一个参数,且参数是枚举字符串,利用ngx_conf_enum_t类型存储枚举映射关系
 char *
 ngx_conf_set_enum_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1384,7 +1385,7 @@ ngx_conf_set_enum_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_ERROR;
 }
 
-
+//配置项携带一个参数,且参数是枚举字符串,利用ngx_conf_bitmask_t类型存储枚举映射关系
 char *
 ngx_conf_set_bitmask_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
