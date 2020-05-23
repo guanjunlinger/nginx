@@ -2724,7 +2724,7 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     ngx_http_listen_opt_t        lsopt;
     ngx_http_core_srv_conf_t    *cscf, **cscfp;
     ngx_http_core_main_conf_t   *cmcf;
-    //初始化ngx_http_conf_ctx_t结构体保存配置信息
+    //初始化ngx_http_conf_ctx_t结构体保存配置项信息
     ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
     if (ctx == NULL) {
         return NGX_CONF_ERROR;

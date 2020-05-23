@@ -79,7 +79,9 @@ ngx_str_t  ngx_http_html_default_types[] = {
     ngx_null_string
 };
 
-
+/**
+ * http配置块处理器
+ */
 static ngx_command_t  ngx_http_commands[] = {
 
     { ngx_string("http"),
@@ -115,7 +117,7 @@ ngx_module_t  ngx_http_module = {
     NGX_MODULE_V1_PADDING
 };
 
-
+//初始化顶层的ngx_http_conf_ctx_t结构体
 static char *
 ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
