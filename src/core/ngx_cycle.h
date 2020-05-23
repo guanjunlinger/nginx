@@ -37,9 +37,8 @@ struct ngx_shm_zone_s {
 
 
 struct ngx_cycle_s {
-    //保留所有模块的配置信息
+    //所有模块配置信息的指针数组
     void                  ****conf_ctx;
-    //内存池
     ngx_pool_t               *pool;
 
     ngx_log_t                *log;
@@ -48,7 +47,6 @@ struct ngx_cycle_s {
     ngx_uint_t                log_use_stderr;  /* unsigned  log_use_stderr:1; */
 
     ngx_connection_t        **files;
-    //空闲连接链表首元素
     ngx_connection_t         *free_connections;
     ngx_uint_t                free_connection_n;
 
@@ -72,7 +70,7 @@ struct ngx_cycle_s {
 
     ngx_uint_t                connection_n;
     ngx_uint_t                files_n;
-    //连接池链表头结点
+
     ngx_connection_t         *connections;
     ngx_event_t              *read_events;
     ngx_event_t              *write_events;

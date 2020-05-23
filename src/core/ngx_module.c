@@ -17,8 +17,9 @@ static ngx_uint_t ngx_module_index(ngx_cycle_t *cycle);
 static ngx_uint_t ngx_module_ctx_index(ngx_cycle_t *cycle, ngx_uint_t type,
     ngx_uint_t index);
 
-
+//ngx允许配置的最多模块数
 ngx_uint_t         ngx_max_module;
+//ngx配置的静态模块数
 static ngx_uint_t  ngx_modules_n;
 
 
@@ -42,7 +43,7 @@ ngx_preinit_modules(void)
 ngx_int_t
 ngx_cycle_modules(ngx_cycle_t *cycle)
 {
-    /*
+    /* 
      * create a list of modules to be used for this cycle,
      * copy static modules to it
      */

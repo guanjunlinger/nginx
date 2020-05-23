@@ -303,7 +303,6 @@ typedef struct {
 
 
 struct ngx_http_core_loc_conf_s {
-    //location 定义的表达式
     ngx_str_t     name;          /* location name */
 
 #if (NGX_PCRE)
@@ -329,7 +328,6 @@ struct ngx_http_core_loc_conf_s {
 #endif
 
     /* pointer to the modules' loc_conf */
-    //所有模块create_loc_conf产生的结构体指针
     void        **loc_conf;
 
     uint32_t      limit_except;
