@@ -81,8 +81,9 @@ struct ngx_command_s {
     ngx_uint_t            type;
     //配置项的处理方法
     char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
-    //配置项的偏移量
+    //当前配置项所在的配置结构体在复合配置结构体中的偏移量
     ngx_uint_t            conf;
+    //当前配置项在配置结构体的偏移量
     ngx_uint_t            offset;
     //ngx_conf_post_t结构指针,对配置项后处理
     void                 *post;
