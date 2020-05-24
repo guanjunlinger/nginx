@@ -68,8 +68,9 @@ static ngx_int_t ngx_http_add_addrs6(ngx_conf_t *cf, ngx_http_port_t *hport,
 
 ngx_uint_t   ngx_http_max_module;
 
-
+//全局header过滤器的链表头结点
 ngx_http_output_header_filter_pt  ngx_http_top_header_filter;
+//全局body过滤器的链表头结点
 ngx_http_output_body_filter_pt    ngx_http_top_body_filter;
 ngx_http_request_body_filter_pt   ngx_http_top_request_body_filter;
 

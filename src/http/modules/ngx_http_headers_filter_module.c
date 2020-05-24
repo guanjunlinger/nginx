@@ -704,7 +704,10 @@ ngx_http_headers_merge_conf(ngx_conf_t *cf, void *parent, void *child)
     return NGX_CONF_OK;
 }
 
-
+/**
+ * 将当前header过滤模块置于链表头结点
+ * ngx_http_next_header_filter保留原来的链表头结点
+ */ 
 static ngx_int_t
 ngx_http_headers_filter_init(ngx_conf_t *cf)
 {

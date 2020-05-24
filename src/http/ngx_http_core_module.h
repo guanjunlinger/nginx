@@ -105,25 +105,18 @@ typedef struct {
 
 
 typedef enum {
-    //接受完整的HTTP头部
     NGX_HTTP_POST_READ_PHASE = 0,
-   //URI与location表达式匹配前
     NGX_HTTP_SERVER_REWRITE_PHASE,
-   //根据URI寻找匹配的location块
     NGX_HTTP_FIND_CONFIG_PHASE,
-    //寻找匹配的URI之后,修改URI
     NGX_HTTP_REWRITE_PHASE,
-    //重写URI之后，防止死循环
     NGX_HTTP_POST_REWRITE_PHASE,
-    //在权限校验前.HTTP模块可以介入的阶段
+    
     NGX_HTTP_PREACCESS_PHASE,
     NGX_HTTP_ACCESS_PHASE,
     NGX_HTTP_POST_ACCESS_PHASE,
 
     NGX_HTTP_PRECONTENT_PHASE,
-    //处理HTTP请求体的阶段
     NGX_HTTP_CONTENT_PHASE,
-    //请求处理完，日志记录阶段
     NGX_HTTP_LOG_PHASE
 } ngx_http_phases;
 
