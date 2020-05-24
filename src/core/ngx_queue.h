@@ -14,7 +14,11 @@
 
 
 typedef struct ngx_queue_s  ngx_queue_t;
-
+/**
+ * 双向链表
+ * 使用场景:链表元素的结构体必须包含ngx_queue_t成员
+ * 实现了插入排序
+ */
 struct ngx_queue_s {
     ngx_queue_t  *prev;
     ngx_queue_t  *next;
@@ -29,7 +33,7 @@ struct ngx_queue_s {
 #define ngx_queue_empty(h)                                                    \
     (h == (h)->prev)
 
-
+//将x节点插入h节点之后
 #define ngx_queue_insert_head(h, x)                                           \
     (x)->next = (h)->next;                                                    \
     (x)->next->prev = x;                                                      \
@@ -39,7 +43,7 @@ struct ngx_queue_s {
 
 #define ngx_queue_insert_after   ngx_queue_insert_head
 
-
+//将x节点插入h节点之前
 #define ngx_queue_insert_tail(h, x)                                           \
     (x)->prev = (h)->prev;                                                    \
     (x)->prev->next = x;                                                      \
@@ -99,7 +103,10 @@ struct ngx_queue_s {
     (h)->prev = (n)->prev;                                                    \
     (h)->prev->next = h;
 
-
+/**返回ngx_queue_t所在结构体的地址
+ * u_char *转换保证指针的算术运算以字节为单位
+ */
+ 
 #define ngx_queue_data(q, type, link)                                         \
     (type *) ((u_char *) q - offsetof(type, link))
 
