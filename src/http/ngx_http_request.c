@@ -2385,7 +2385,11 @@ ngx_http_run_posted_requests(ngx_connection_t *c)
     }
 }
 
-
+/**
+ @r   子请求
+ @pr  ngx_http_posted_request_t结构体封装子请求 
+   将子请求加入父请求的posted_requests链表
+ */
 ngx_int_t
 ngx_http_post_request(ngx_http_request_t *r, ngx_http_posted_request_t *pr)
 {
@@ -2437,7 +2441,7 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
         ngx_http_core_run_phases(r);
         return;
     }
-
+   //当前请求是子请求,执行子请求结束的回调方法
     if (r != r->main && r->post_subrequest) {
         rc = r->post_subrequest->handler(r, r->post_subrequest->data, rc);
     }

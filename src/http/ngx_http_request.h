@@ -374,7 +374,7 @@ typedef void (*ngx_http_event_handler_pt)(ngx_http_request_t *r);
 struct ngx_http_request_s {
     uint32_t                          signature;         /* "HTTP" */
     ngx_connection_t                 *connection;
-
+    //保留所有HTTP模块产生的请求上下文信息
     void                            **ctx;
     void                            **main_conf;
     void                            **srv_conf;
@@ -491,7 +491,7 @@ struct ngx_http_request_s {
     unsigned                          request_body_file_group_access:1;
     unsigned                          request_body_file_log_level:3;
     unsigned                          request_body_no_buffering:1;
-
+    
     unsigned                          subrequest_in_memory:1;
     unsigned                          waited:1;
 

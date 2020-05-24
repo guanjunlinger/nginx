@@ -303,7 +303,6 @@ typedef struct {
     ngx_str_t                        host;
     in_port_t                        port;
     ngx_uint_t                       no_port; /* unsigned no_port:1 */
-
     ngx_uint_t                       naddrs;
     ngx_resolver_addr_t             *addrs;
 
@@ -322,7 +321,7 @@ typedef void (*ngx_http_upstream_handler_pt)(ngx_http_request_t *r,
 struct ngx_http_upstream_s {
     ngx_http_upstream_handler_pt     read_event_handler;
     ngx_http_upstream_handler_pt     write_event_handler;
-    //主动向上游服务器发送的连接
+    //主动向上游服务器发起的连接
     ngx_peer_connection_t            peer;
 
     ngx_event_pipe_t                *pipe;
@@ -331,19 +330,24 @@ struct ngx_http_upstream_s {
 
     ngx_output_chain_ctx_t           output;
     ngx_chain_writer_ctx_t           writer;
-
+    //upstream模块配置信息
     ngx_http_upstream_conf_t        *conf;
     ngx_http_upstream_srv_conf_t    *upstream;
 #if (NGX_HTTP_CACHE)
     ngx_array_t                     *caches;
 #endif
-
+    
     ngx_http_upstream_headers_in_t   headers_in;
-
+    //设置上游服务器地址
     ngx_http_upstream_resolved_t    *resolved;
 
     ngx_buf_t                        from_client;
-    //接受上游服务响应包头的缓冲区
+    /**
+     * a.在process_header回调时，存储响应包头
+     * b.buffering=1,upstream向下游转发包体时,无意义
+     * c.buffering=0,反复接受上游包体,向下游转发
+     * 
+     */
     ngx_buf_t                        buffer;
     //上游服务器响应包体的长度
     off_t                            length;
@@ -359,7 +363,6 @@ struct ngx_http_upstream_s {
 #if (NGX_HTTP_CACHE)
     ngx_int_t                      (*create_key)(ngx_http_request_t *r);
 #endif
-    //构造发往上游服务器的请求
     ngx_int_t                      (*create_request)(ngx_http_request_t *r);
     ngx_int_t                      (*reinit_request)(ngx_http_request_t *r);
     ngx_int_t                      (*process_header)(ngx_http_request_t *r);
@@ -392,7 +395,10 @@ struct ngx_http_upstream_s {
 #if (NGX_HTTP_CACHE)
     unsigned                         cache_status:3;
 #endif
-
+   /**
+    *   0:只使用buffer缓冲区转发响应包体
+    *   1:使用多个缓冲区和磁盘文件转发包体 
+    */ 
     unsigned                         buffering:1;
     unsigned                         keepalive:1;
     unsigned                         upgrade:1;

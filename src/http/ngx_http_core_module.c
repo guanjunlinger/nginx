@@ -2215,7 +2215,15 @@ ngx_http_gzip_quantity(u_char *p, u_char *last)
 
 #endif
 
+/**
+ @r   父请求
+ @uri 子请求的URI
+ @args 子请求的查询参数
+ @psr  创建的子请求
+ @ps   子请求结束的回调方法
+ @flags 设置子请求标志位相关的宏定义
 
+ */
 ngx_int_t
 ngx_http_subrequest(ngx_http_request_t *r,
     ngx_str_t *uri, ngx_str_t *args, ngx_http_request_t **psr,
