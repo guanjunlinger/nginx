@@ -65,10 +65,10 @@ ngx_http_postpone_filter(ngx_http_request_t *r, ngx_chain_t *in)
     if (r->subrequest_in_memory) {
         return ngx_http_postpone_filter_in_memory(r, in);
     }
-
+    //当前请求是子请求
     if (r != c->data) {
-
         if (in) {
+            //将in发送到属性当前请求的ngx_http_postponed_request_t结构体的out链表中
             if (ngx_http_postpone_filter_add(r, in) != NGX_OK) {
                 return NGX_ERROR;
             }
@@ -84,7 +84,7 @@ ngx_http_postpone_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
         return NGX_OK;
     }
-
+   //当前请求没有子请求的响应需要转发
     if (r->postponed == NULL) {
 
         if (in || c->buffered) {
@@ -99,10 +99,9 @@ ngx_http_postpone_filter(ngx_http_request_t *r, ngx_chain_t *in)
             return NGX_ERROR;
         }
     }
-
+//遍历postponed链表,处理子请求
     do {
         pr = r->postponed;
-
         if (pr->request) {
 
             ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,

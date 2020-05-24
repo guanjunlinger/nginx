@@ -421,6 +421,7 @@ struct ngx_http_request_s {
     ngx_chain_t                      *out;
     ngx_http_request_t               *main;
     ngx_http_request_t               *parent;
+    //按创建顺序依次执行的子请求列表
     ngx_http_postponed_request_t     *postponed;
     ngx_http_post_subrequest_t       *post_subrequest;
     ngx_http_posted_request_t        *posted_requests;
