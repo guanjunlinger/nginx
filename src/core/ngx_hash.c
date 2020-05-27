@@ -8,7 +8,9 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-
+/**
+ * trick:通过key的首地址与长度,定位下一个元素的首地址
+ */
 void *
 ngx_hash_find(ngx_hash_t *hash, ngx_uint_t key, u_char *name, size_t len)
 {
@@ -247,7 +249,11 @@ ngx_hash_find_combined(ngx_hash_combined_t *hash, ngx_uint_t key, u_char *name,
 
 #define NGX_HASH_ELT_SIZE(name)                                               \
     (sizeof(void *) + ngx_align((name)->key.len + 2, sizeof(void *)))
-
+/**
+ * @hinit  哈希表初始化结构指针
+ * @names  待添加的元素数组
+ * @nelts  待添加的元素个数
+ */
 ngx_int_t
 ngx_hash_init(ngx_hash_init_t *hinit, ngx_hash_key_t *names, ngx_uint_t nelts)
 {
@@ -626,7 +632,7 @@ ngx_hash_wildcard_init(ngx_hash_init_t *hinit, ngx_hash_key_t *names,
     return NGX_OK;
 }
 
-
+//BKDR算法用于字符串hash
 ngx_uint_t
 ngx_hash_key(u_char *data, size_t len)
 {
@@ -641,7 +647,7 @@ ngx_hash_key(u_char *data, size_t len)
     return key;
 }
 
-
+//字符串小写后,BKDR算法用于字符串hash
 ngx_uint_t
 ngx_hash_key_lc(u_char *data, size_t len)
 {

@@ -15,14 +15,16 @@
 
 typedef struct {
     void             *value;
+    //key的长度
     u_short           len;
+    //key的首地址
     u_char            name[1];
 } ngx_hash_elt_t;
 
 /**
-  线性探测再散列解决冲突
-  
- */ 
+  数组组织哈希桶
+  数组解决冲突
+*/ 
 typedef struct {
     ngx_hash_elt_t  **buckets;
     ngx_uint_t        size;
@@ -52,14 +54,12 @@ typedef struct {
     ngx_hash_wildcard_t  *wc_tail;
 } ngx_hash_combined_t;
 
-
 typedef struct {
     ngx_hash_t       *hash;
     ngx_hash_key_pt   key;
-
     ngx_uint_t        max_size;
+    //哈希桶的存储空间
     ngx_uint_t        bucket_size;
-
     char             *name;
     ngx_pool_t       *pool;
     ngx_pool_t       *temp_pool;
