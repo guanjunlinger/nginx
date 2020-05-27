@@ -21,6 +21,7 @@ struct ngx_radix_node_s {
     ngx_radix_node_t  *right;
     ngx_radix_node_t  *left;
     ngx_radix_node_t  *parent;
+    //关键字对应的数据结构体指针
     uintptr_t          value;
 };
 

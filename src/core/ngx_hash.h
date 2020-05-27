@@ -19,18 +19,19 @@ typedef struct {
     u_char            name[1];
 } ngx_hash_elt_t;
 
-
+/**
+  线性探测再散列解决冲突
+  
+ */ 
 typedef struct {
     ngx_hash_elt_t  **buckets;
     ngx_uint_t        size;
 } ngx_hash_t;
 
-
 typedef struct {
     ngx_hash_t        hash;
     void             *value;
 } ngx_hash_wildcard_t;
-
 
 typedef struct {
     ngx_str_t         key;
@@ -43,8 +44,11 @@ typedef ngx_uint_t (*ngx_hash_key_pt) (u_char *data, size_t len);
 
 
 typedef struct {
+    //普通散列表
     ngx_hash_t            hash;
+    //前置通配符的散列表
     ngx_hash_wildcard_t  *wc_head;
+    //后置通配符的散列表
     ngx_hash_wildcard_t  *wc_tail;
 } ngx_hash_combined_t;
 

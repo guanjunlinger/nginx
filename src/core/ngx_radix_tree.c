@@ -11,7 +11,8 @@
 
 static ngx_radix_node_t *ngx_radix_alloc(ngx_radix_tree_t *tree);
 
-
+/**初始化基数树,预分配树节点
+ */
 ngx_radix_tree_t *
 ngx_radix_tree_create(ngx_pool_t *pool, ngx_int_t preallocate)
 {
@@ -104,19 +105,22 @@ ngx_radix_tree_create(ngx_pool_t *pool, ngx_int_t preallocate)
     return tree;
 }
 
-
+/**
+ * @tree 树根节点
+ * @key  关键字
+ * @mask 关键字掩码
+ * 
+ */
 ngx_int_t
 ngx_radix32tree_insert(ngx_radix_tree_t *tree, uint32_t key, uint32_t mask,
     uintptr_t value)
 {
     uint32_t           bit;
     ngx_radix_node_t  *node, *next;
-
     bit = 0x80000000;
 
     node = tree->root;
     next = tree->root;
-
     while (bit & mask) {
         if (key & bit) {
             next = node->right;
@@ -132,7 +136,6 @@ ngx_radix32tree_insert(ngx_radix_tree_t *tree, uint32_t key, uint32_t mask,
         bit >>= 1;
         node = next;
     }
-
     if (next) {
         if (node->value != NGX_RADIX_NO_VALUE) {
             return NGX_BUSY;
@@ -231,7 +234,6 @@ ngx_radix32tree_delete(ngx_radix_tree_t *tree, uint32_t key, uint32_t mask)
 
     return NGX_OK;
 }
-
 
 uintptr_t
 ngx_radix32tree_find(ngx_radix_tree_t *tree, uint32_t key)
