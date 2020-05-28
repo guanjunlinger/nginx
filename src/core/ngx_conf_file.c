@@ -86,7 +86,6 @@ ngx_conf_param(ngx_conf_t *cf)
     conf_file.file.fd = NGX_INVALID_FILE;
     conf_file.file.name.data = NULL;
     conf_file.line = 0;
-
     cf->conf_file = &conf_file;
     cf->conf_file->buffer = &b;
 

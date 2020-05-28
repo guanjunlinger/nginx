@@ -65,13 +65,12 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
 
     log = old_cycle->log;
-
+    //初始化内存池
     pool = ngx_create_pool(NGX_CYCLE_POOL_SIZE, log);
     if (pool == NULL) {
         return NULL;
     }
     pool->log = log;
-
     cycle = ngx_pcalloc(pool, sizeof(ngx_cycle_t));
     if (cycle == NULL) {
         ngx_destroy_pool(pool);
@@ -112,7 +111,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
-
+    //path数组默认大小10
     n = old_cycle->paths.nelts ? old_cycle->paths.nelts : 10;
 
     if (ngx_array_init(&cycle->paths, pool, n, sizeof(ngx_path_t *))
@@ -134,7 +133,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     ngx_rbtree_init(&cycle->config_dump_rbtree, &cycle->config_dump_sentinel,
                     ngx_str_rbtree_insert_value);
-
+    //ngx_open_file_t数组默认大小为20 
     if (old_cycle->open_files.part.nelts) {
         n = old_cycle->open_files.part.nelts;
         for (part = old_cycle->open_files.part.next; part; part = part->next) {
@@ -152,7 +151,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
-
+    //ngx_shm_zone_t数组默认大小为1
     if (old_cycle->shared_memory.part.nelts) {
         n = old_cycle->shared_memory.part.nelts;
         for (part = old_cycle->shared_memory.part.next; part; part = part->next)
@@ -170,7 +169,8 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         ngx_destroy_pool(pool);
         return NULL;
     }
-
+     
+    //ngx_listening_t数组默认大小10 
     n = old_cycle->listening.nelts ? old_cycle->listening.nelts : 10;
 
     if (ngx_array_init(&cycle->listening, pool, n, sizeof(ngx_listening_t))
@@ -185,14 +185,14 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     ngx_queue_init(&cycle->reusable_connections_queue);
 
-    //初始化nginx全部模块配置结构体指针数组 
+    //初始化nginx所有模块配置结构体指针数组 
     cycle->conf_ctx = ngx_pcalloc(pool, ngx_max_module * sizeof(void *));
     if (cycle->conf_ctx == NULL) {
         ngx_destroy_pool(pool);
         return NULL;
     }
 
-
+    //gethostname系统调用初始化hostname属性
     if (gethostname(hostname, NGX_MAXHOSTNAMELEN) == -1) {
         ngx_log_error(NGX_LOG_EMERG, log, ngx_errno, "gethostname() failed");
         ngx_destroy_pool(pool);
@@ -212,13 +212,17 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     ngx_strlow(cycle->hostname.data, (u_char *) hostname, cycle->hostname.len);
 
-    //初始化nginx全部模块指针数组
+    //用nginx全局的模块指针数组初始化cycle的modules属性
     if (ngx_cycle_modules(cycle) != NGX_OK) {
         ngx_destroy_pool(pool);
         return NULL;
     }
 
-    //执行nginx核心模块的create_conf回调
+    /**
+     * 查找nginx核心模块的上下文结构体ngx_core_module_t
+     * 执行ngx_core_module_t的create_conf回调
+     * 将返回的配置结构体指针保存到conf_ctx数组对应的位置
+     */ 
     for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->type != NGX_CORE_MODULE) {
             continue;
@@ -239,9 +243,10 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     senv = environ;
 
-    //初始化ngx_conf_s结构体
+    //初始化ngx_conf_t结构体
     ngx_memzero(&conf, sizeof(ngx_conf_t));
     /* STUB: init array ? */
+    //初始化args数组大小为10
     conf.args = ngx_array_create(pool, 10, sizeof(ngx_str_t));
     if (conf.args == NULL) {
         ngx_destroy_pool(pool);
@@ -254,7 +259,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
-
+    //记录全局配置指针数组
     conf.ctx = cycle->conf_ctx;
     conf.cycle = cycle;
     conf.pool = pool;
@@ -265,13 +270,13 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 #if 0
     log->log_level = NGX_LOG_DEBUG_ALL;
 #endif
-      //初始化ngx_conf_t结构体的conf_file成员
+      //初始化ngx_conf_t结构体的conf_file成员,用cycle->conf_param填充buffer属性
     if (ngx_conf_param(&conf) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
         return NULL;
     }
-    //打开配置文件,实例化ngx_conf_t结构体的conf_file成员
+    //解析配置文件
     if (ngx_conf_parse(&conf, &cycle->conf_file) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
@@ -282,7 +287,11 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         ngx_log_stderr(0, "the configuration file %s syntax is ok",
                        cycle->conf_file.data);
     }
-    //执行nginx核心模块的init_conf回调
+      /**
+     * 查找nginx核心模块的上下文结构体ngx_core_module_t
+     * 执行ngx_core_module_t的init_conf回调
+     * 将返回的配置结构体指针保存到conf_ctx数组对应的位置
+     */ 
     for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->type != NGX_CORE_MODULE) {
             continue;
@@ -341,12 +350,16 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         goto failed;
     }
 
-
+    /**
+     * 检测nginx配置的目录访问权限
+     */ 
     if (ngx_create_paths(cycle, ccf->user) != NGX_OK) {
         goto failed;
     }
 
-
+    /**
+     * 打开nginx日志文件
+     */ 
     if (ngx_log_open_default(cycle) != NGX_OK) {
         goto failed;
     }
@@ -604,7 +617,6 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 #endif
         }
     }
-   //初始化套接字,监听指定端口
     if (ngx_open_listening_sockets(cycle) != NGX_OK) {
         goto failed;
     }
