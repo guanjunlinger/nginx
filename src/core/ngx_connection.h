@@ -22,7 +22,7 @@ struct ngx_listening_s {
     socklen_t           socklen;    /* size of sockaddr */
     size_t              addr_text_max_len;
     ngx_str_t           addr_text;
-
+    //套接字类型
     int                 type;
 
     int                 backlog;
@@ -45,7 +45,9 @@ struct ngx_listening_s {
     size_t              pool_size;
     /* should be here because of the AcceptEx() preread */
     size_t              post_accept_buffer_size;
-    /* should be here because of the deferred accept */
+    /* should be here because of the deferred accept 
+      TCP_DEFER_ACCEPT选项的超时时间
+    */
     ngx_msec_t          post_accept_timeout;
 
     ngx_listening_t    *previous;

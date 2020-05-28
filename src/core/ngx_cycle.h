@@ -37,7 +37,6 @@ struct ngx_shm_zone_s {
 
 
 struct ngx_cycle_s {
-    //所有模块配置信息的指针数组
     void                  ****conf_ctx;
     ngx_pool_t               *pool;
 
@@ -49,22 +48,21 @@ struct ngx_cycle_s {
     ngx_connection_t        **files;
     ngx_connection_t         *free_connections;
     ngx_uint_t                free_connection_n;
-
+    //nginx模块的指针数组
     ngx_module_t            **modules;
+    //nginx模块的数量
     ngx_uint_t                modules_n;
     ngx_uint_t                modules_used;    /* unsigned  modules_used:1; */
 
     ngx_queue_t               reusable_connections_queue;
     ngx_uint_t                reusable_connections_n;
-    //存放ngx_listening_t结构体
     ngx_array_t               listening;
-    //存放nginx操作的目录列表
+    //nginx操作的所有目录
     ngx_array_t               paths;
 
     ngx_array_t               config_dump;
     ngx_rbtree_t              config_dump_rbtree;
     ngx_rbtree_node_t         config_dump_sentinel;
-    //存放ngx_open_file_t结构体
     ngx_list_t                open_files;
     ngx_list_t                shared_memory;
 
@@ -76,8 +74,9 @@ struct ngx_cycle_s {
     ngx_event_t              *write_events;
 
     ngx_cycle_t              *old_cycle;
-
+    //配置文件相对路径
     ngx_str_t                 conf_file;
+    // -g选项携带的命令行参数
     ngx_str_t                 conf_param;
     //配置文件目录
     ngx_str_t                 conf_prefix;
