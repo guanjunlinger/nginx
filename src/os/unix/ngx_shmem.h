@@ -18,6 +18,7 @@ typedef struct {
     size_t       size;
     ngx_str_t    name;
     ngx_log_t   *log;
+    //共享内存是否分配过
     ngx_uint_t   exists;   /* unsigned  exists:1;  */
 } ngx_shm_t;
 

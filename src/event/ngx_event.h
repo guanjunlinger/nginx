@@ -445,7 +445,6 @@ typedef struct {
     u_char       *name;
 
 #if (NGX_DEBUG)
-    //with-debug编译模式下,输出客户端连接的调试信息
     ngx_array_t   debug_connection;
 #endif
 } ngx_event_conf_t;
@@ -455,7 +454,6 @@ typedef struct {
 
     void                 *(*create_conf)(ngx_cycle_t *cycle);
     char                 *(*init_conf)(ngx_cycle_t *cycle, void *conf);
-    //event模块实现的10个抽象方法
     ngx_event_actions_t     actions;
 } ngx_event_module_t;
 

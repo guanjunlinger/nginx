@@ -119,7 +119,6 @@ ngx_module_t  ngx_events_module = {
 
 static ngx_str_t  event_core_name = ngx_string("event_core");
 
-//event核心模块感兴趣的配置项
 static ngx_command_t  ngx_event_core_commands[] = {
 
     { ngx_string("worker_connections"),
@@ -1216,7 +1215,9 @@ ngx_event_debug_connection(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-
+/**
+ * 创建ngx_event_conf_t结构体,属性为类型默认值
+ */
 static void *
 ngx_event_core_create_conf(ngx_cycle_t *cycle)
 {
@@ -1247,7 +1248,9 @@ ngx_event_core_create_conf(ngx_cycle_t *cycle)
     return ecf;
 }
 
-
+/**
+ *  选择系统支持的事件模块;为事件模块参数取默认值
+ */ 
 static char *
 ngx_event_core_init_conf(ngx_cycle_t *cycle, void *conf)
 {
@@ -1261,7 +1264,6 @@ ngx_event_core_init_conf(ngx_cycle_t *cycle, void *conf)
     ngx_event_module_t  *event_module;
 
     module = NULL;
-
 #if (NGX_HAVE_EPOLL) && !(NGX_TEST_BUILD_EPOLL)
 
     fd = epoll_create(100);

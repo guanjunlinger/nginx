@@ -65,7 +65,6 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
 
     log = old_cycle->log;
-    //初始化内存池
     pool = ngx_create_pool(NGX_CYCLE_POOL_SIZE, log);
     if (pool == NULL) {
         return NULL;
@@ -221,7 +220,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     /**
      * 查找nginx核心模块的上下文结构体ngx_core_module_t
      * 执行ngx_core_module_t的create_conf回调
-     * 将返回的配置结构体指针保存到conf_ctx数组对应的位置
+     * 将返回的ngx_core_conf_t结构体指针保存到conf_ctx数组对应的位置
      */ 
     for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->type != NGX_CORE_MODULE) {
@@ -258,8 +257,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         ngx_destroy_pool(pool);
         return NULL;
     }
-
-    //记录全局配置指针数组
+    
     conf.ctx = cycle->conf_ctx;
     conf.cycle = cycle;
     conf.pool = pool;
@@ -270,13 +268,13 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 #if 0
     log->log_level = NGX_LOG_DEBUG_ALL;
 #endif
-      //初始化ngx_conf_t结构体的conf_file成员,用cycle->conf_param填充buffer属性
+      //根据cycle->conf_param初始化ngx_conf_t结构体的conf_file成员的buffer属性
     if (ngx_conf_param(&conf) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
         return NULL;
     }
-    //解析配置文件
+    //打开配置文件,设置buffer缓冲区容量
     if (ngx_conf_parse(&conf, &cycle->conf_file) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
@@ -290,7 +288,6 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
       /**
      * 查找nginx核心模块的上下文结构体ngx_core_module_t
      * 执行ngx_core_module_t的init_conf回调
-     * 将返回的配置结构体指针保存到conf_ctx数组对应的位置
      */ 
     for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->type != NGX_CORE_MODULE) {
@@ -414,7 +411,9 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     pool->log = &cycle->new_log;
 
 
-    /* create shared memory */
+    /* create shared memory
+      处理全局的共享内存
+     */
 
     part = &cycle->shared_memory.part;
     shm_zone = part->elts;
