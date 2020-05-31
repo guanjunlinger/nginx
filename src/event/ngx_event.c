@@ -101,10 +101,10 @@ static ngx_core_module_t  ngx_events_module_ctx = {
 };
 
 /**
- * nginx事件模块只对events配置项感兴趣
+ * ngx_events_module事件模块只对events配置项感兴趣
  * 通过ngx_events_block配置项处理器完成以下工作:
- *    1.为同类型模块分配ctx_index
- *    2.触发ngx_event_module_t的create_conf回调
+ *    1.为NGX_EVENT_MODULE类型的模块分配ctx_index
+ *    2.触发ngx_event_module_t的create_conf回调和init_conf回调
  */ 
 ngx_module_t  ngx_events_module = {
     NGX_MODULE_V1,
@@ -868,7 +868,6 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         }
 
 #else
-        //设置监听事件处理器 
         rev->handler = (c->type == SOCK_STREAM) ? ngx_event_accept
                                                 : ngx_event_recvmsg;
 
@@ -1012,7 +1011,6 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
 
         m = cf->cycle->modules[i]->ctx;
-        //事件模块的init_conf回调 
         if (m->init_conf) {
             rv = m->init_conf(cf->cycle,
                               (*ctx)[cf->cycle->modules[i]->ctx_index]);
