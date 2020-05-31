@@ -281,7 +281,7 @@ main(int argc, char *const *argv)
     if (ngx_add_inherited_sockets(&init_cycle) != NGX_OK) {
         return 1;
     }
-    //初始化nginx模块的index和name
+    //初始化nginx模块的index
     if (ngx_preinit_modules() != NGX_OK) {
         return 1;
     }

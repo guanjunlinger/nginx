@@ -204,7 +204,6 @@ typedef struct {
     ngx_http_core_loc_conf_t  **named_locations;
 } ngx_http_core_srv_conf_t;
 
-
 /* list of structures to find core_srv_conf quickly at run time */
 
 
@@ -320,7 +319,9 @@ struct ngx_http_core_loc_conf_s {
     ngx_http_core_loc_conf_t       **regex_locations;
 #endif
 
-    /* pointer to the modules' loc_conf */
+    /* pointer to the modules' loc_conf 
+       ngx_http_conf_ctx_t结构体的loc_conf属性指针
+    */
     void        **loc_conf;
 
     uint32_t      limit_except;

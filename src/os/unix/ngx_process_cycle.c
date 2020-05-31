@@ -164,21 +164,21 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
         }
 
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "sigsuspend");
-
+        //休眠进程,等待信号激活
         sigsuspend(&set);
 
         ngx_time_update();
 
         ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                        "wake up, sigio %i", sigio);
-
+        //监控子进程状态标志位
         if (ngx_reap) {
             ngx_reap = 0;
             ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "reap children");
 
             live = ngx_reap_children(cycle);
         }
-
+        //live =0 表示所有子进程退出
         if (!live && (ngx_terminate || ngx_quit)) {
             ngx_master_process_exit(cycle);
         }
@@ -198,6 +198,7 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
             if (delay > 1000) {
                 ngx_signal_worker_processes(cycle, SIGKILL);
             } else {
+                //向所有子进程发送TERM信号
                 ngx_signal_worker_processes(cycle,
                                        ngx_signal_value(NGX_TERMINATE_SIGNAL));
             }
@@ -206,6 +207,7 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
         }
 
         if (ngx_quit) {
+            //向所有子进程发送QUIT信号
             ngx_signal_worker_processes(cycle,
                                         ngx_signal_value(NGX_SHUTDOWN_SIGNAL));
 
@@ -359,7 +361,7 @@ ngx_start_worker_processes(ngx_cycle_t *cycle, ngx_int_t n, ngx_int_t type)
     ch.command = NGX_CMD_OPEN_CHANNEL;
 
     for (i = 0; i < n; i++) {
-
+        //创建worker进程,启动任务循环
         ngx_spawn_process(cycle, ngx_worker_process_cycle,
                           (void *) (intptr_t) i, "worker process", type);
 
@@ -689,7 +691,7 @@ static void
 ngx_master_process_exit(ngx_cycle_t *cycle)
 {
     ngx_uint_t  i;
-
+    //删除pid文件
     ngx_delete_pidfile(cycle);
 
     ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exit");
@@ -741,7 +743,7 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
     ngx_setproctitle("worker process");
 
     for ( ;; ) {
-
+        //进程退出标志
         if (ngx_exiting) {
             if (ngx_event_no_timers_left() == NGX_OK) {
                 ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
@@ -752,12 +754,12 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "worker cycle");
 
         ngx_process_events_and_timers(cycle);
-
+        //强制退出进程标志 
         if (ngx_terminate) {
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
             ngx_worker_process_exit(cycle);
         }
-
+        //优雅退出进程标志
         if (ngx_quit) {
             ngx_quit = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0,
@@ -771,7 +773,7 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
                 ngx_close_idle_connections(cycle);
             }
         }
-
+        //重新打开所有文件 
         if (ngx_reopen) {
             ngx_reopen = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reopening logs");

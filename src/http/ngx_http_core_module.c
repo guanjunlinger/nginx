@@ -206,7 +206,6 @@ static ngx_command_t  ngx_http_core_commands[] = {
       NGX_HTTP_MAIN_CONF_OFFSET,
       offsetof(ngx_http_core_main_conf_t, server_names_hash_bucket_size),
       NULL },
-
     { ngx_string("server"),
       NGX_HTTP_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
       ngx_http_core_server,
@@ -2716,7 +2715,6 @@ ngx_http_get_forwarded_addr_internal(ngx_http_request_t *r, ngx_addr_t *addr,
     return NGX_OK;
 }
 
-//server配置项的处理器
 static char *
 ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 {
@@ -2732,18 +2730,17 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     ngx_http_listen_opt_t        lsopt;
     ngx_http_core_srv_conf_t    *cscf, **cscfp;
     ngx_http_core_main_conf_t   *cmcf;
-    //初始化ngx_http_conf_ctx_t结构体保存配置项信息
+    //创建ngx_http_conf_ctx_t结构体保存HTTP块配置信息
     ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
     if (ctx == NULL) {
         return NGX_CONF_ERROR;
     }
     
     http_ctx = cf->ctx;
-    //保留main_conf指针数组
+    //复用已有的main_conf指针数组
     ctx->main_conf = http_ctx->main_conf;
 
     /* the server{}'s srv_conf
-     初始化srv_conf指针数组 
     */
    
     ctx->srv_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
@@ -2752,14 +2749,13 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     }
 
     /* the server{}'s loc_conf 
-     初始化loc_conf指针数组
     */
 
     ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
     if (ctx->loc_conf == NULL) {
         return NGX_CONF_ERROR;
     }
-    //遍历所有的HTTP模块,保存配置结构体信息
+    //执行HTTP模块的create_srv_conf和create_loc_conf回调
     for (i = 0; cf->cycle->modules[i]; i++) {
         if (cf->cycle->modules[i]->type != NGX_HTTP_MODULE) {
             continue;
@@ -2790,6 +2786,7 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     /* the server configuration context */
 
     cscf = ctx->srv_conf[ngx_http_core_module.ctx_index];
+    //利用ngx_http_core_srv_conf_t的ctx属性保存全局配置信息
     cscf->ctx = ctx;
 
 
@@ -2865,7 +2862,6 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     return rv;
 }
 
-//location配置项处理器
 static char *
 ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 {
@@ -2885,6 +2881,7 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     }
 
     pctx = cf->ctx;
+    //初始化location配置项的上下文环境
     ctx->main_conf = pctx->main_conf;
     ctx->srv_conf = pctx->srv_conf;
 
@@ -2892,7 +2889,7 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     if (ctx->loc_conf == NULL) {
         return NGX_CONF_ERROR;
     }
-
+ //执行ngx_http_module_t的create_loc_conf回调
     for (i = 0; cf->cycle->modules[i]; i++) {
         if (cf->cycle->modules[i]->type != NGX_HTTP_MODULE) {
             continue;
