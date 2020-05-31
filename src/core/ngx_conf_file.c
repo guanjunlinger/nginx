@@ -28,7 +28,9 @@ static ngx_command_t  ngx_conf_commands[] = {
       ngx_null_command
 };
 
-
+/**
+ * nginx配置模块近支持include指令加载外部配置文件
+ */ 
 ngx_module_t  ngx_conf_module = {
     NGX_MODULE_V1,
     NULL,                                  /* module context */
@@ -152,7 +154,11 @@ ngx_conf_add_dump(ngx_conf_t *cf, ngx_str_t *filename)
     return NGX_OK;
 }
 
-
+/**支持三种不同的解析类型：
+ * 1、解析配置文件；
+ * 2、解析block块设置；
+ * 3、解析命令行配置；
+ */
 char *
 ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
 {
@@ -238,6 +244,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
 
 
     for ( ;; ) {
+        //语法分析
         rc = ngx_conf_read_token(cf);
 
         /*
@@ -313,7 +320,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
             goto failed;
         }
 
-
+        //nginx默认的指令解析器
         rc = ngx_conf_handler(cf, rc);
 
         if (rc == NGX_ERROR) {
@@ -381,7 +388,10 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
             }
 
             found = 1;
-
+            /**触发配置项处理器的条件:
+             * 当前模块是配置模块
+             * 当前模块正在被处理
+             */ 
             if (cf->cycle->modules[i]->type != NGX_CONF_MODULE
                 && cf->cycle->modules[i]->type != cf->module_type)
             {
@@ -445,19 +455,21 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
             conf = NULL;
 
             if (cmd->type & NGX_DIRECT_CONF) {
+                //核心模块的配置项
                 conf = ((void **) cf->ctx)[cf->cycle->modules[i]->index];
 
             } else if (cmd->type & NGX_MAIN_CONF) {
                 conf = &(((void **) cf->ctx)[cf->cycle->modules[i]->index]);
 
             } else if (cf->ctx) {
+                //非核心模块的配置项结构体地址定位
                 confp = *(void **) ((char *) cf->ctx + cmd->conf);
 
                 if (confp) {
                     conf = confp[cf->cycle->modules[i]->ctx_index];
                 }
             }
-
+            //回调配置项处理器
             rv = cmd->set(cf, cmd, conf);
 
             if (rv == NGX_CONF_OK) {
@@ -1030,7 +1042,6 @@ ngx_conf_set_flag_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_conf_post_t  *post;
 
     fp = (ngx_flag_t *) (p + cmd->offset);
-    //默认取值-1,表示未解析
     if (*fp != NGX_CONF_UNSET) {
         return "is duplicate";
     }

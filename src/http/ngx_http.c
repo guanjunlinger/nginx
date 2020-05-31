@@ -80,9 +80,6 @@ ngx_str_t  ngx_http_html_default_types[] = {
     ngx_null_string
 };
 
-/**
- * http配置块处理器
- */
 static ngx_command_t  ngx_http_commands[] = {
 
     { ngx_string("http"),
@@ -102,7 +99,19 @@ static ngx_core_module_t  ngx_http_module_ctx = {
     NULL
 };
 
-
+/**
+ * http模块只对http配置项感兴趣
+ * 注册ngx_http_block处理器完成以下工作:
+ *    初始化NGX_HTTP_MODULE类型模块的ctx_index 
+ *    初始化ngx_http_conf_ctx_t结构体,为属性分配指针数组
+ *    依次执行所有NGX_HTTP_MODULE类型模块ngx_http_module_t上下文结构体的以下回调
+ *      1.create_main_conf
+ *      2.create_srv_conf
+ *      3.create_loc_conf 
+ *      4.preconfiguration 
+ *     
+ * 
+ */
 ngx_module_t  ngx_http_module = {
     NGX_MODULE_V1,
     &ngx_http_module_ctx,                  /* module context */
@@ -118,7 +127,6 @@ ngx_module_t  ngx_http_module = {
     NGX_MODULE_V1_PADDING
 };
 
-//初始化顶层的ngx_http_conf_ctx_t结构体
 static char *
 ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {

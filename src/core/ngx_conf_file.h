@@ -41,6 +41,7 @@
 
 #define NGX_CONF_ARGS_NUMBER 0x000000ff
 #define NGX_CONF_BLOCK       0x00000100
+//配置项携带参数只有一个参数,取值on|off
 #define NGX_CONF_FLAG        0x00000200
 #define NGX_CONF_ANY         0x00000400
 #define NGX_CONF_1MORE       0x00000800
@@ -77,7 +78,7 @@
 struct ngx_command_s {
     //配置项名称
     ngx_str_t             name;
-    //配置项可以出现的位置
+    //配置项可以出现的位置和参数数目
     ngx_uint_t            type;
     //配置项
     char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
@@ -130,6 +131,7 @@ struct ngx_conf_s {
 
     void                 *ctx;
     ngx_uint_t            module_type;
+    //指令类型
     ngx_uint_t            cmd_type;
 
     ngx_conf_handler_pt   handler;

@@ -206,7 +206,7 @@ main(int argc, char *const *argv)
     if (ngx_strerror_init() != NGX_OK) {
         return 1;
     }
-   //解析nginx启动参数
+   //解析命令行参数
     if (ngx_get_options(argc, argv) != NGX_OK) {
         return 1;
     }
@@ -226,7 +226,6 @@ main(int argc, char *const *argv)
 #if (NGX_PCRE)
     ngx_regex_init();
 #endif
-    //保存进程ID
     ngx_pid = ngx_getpid();
     ngx_parent = ngx_getppid();
 
@@ -247,11 +246,12 @@ main(int argc, char *const *argv)
     ngx_memzero(&init_cycle, sizeof(ngx_cycle_t));
     init_cycle.log = log;
     ngx_cycle = &init_cycle;
-    //初始化内存池 
+
     init_cycle.pool = ngx_create_pool(1024, log);
     if (init_cycle.pool == NULL) {
         return 1;
     }
+    //保存命令行参数到全局变量ngx_argc中
     if (ngx_save_argv(&init_cycle, argc, argv) != NGX_OK) {
         return 1;
     }
@@ -277,7 +277,7 @@ main(int argc, char *const *argv)
      */
 
     ngx_slab_sizes_init();
-    //平滑升级时,通过nginx环境变量传递Socket信息
+    //平滑升级时,通过nginx环境变量传递Socket信息,保存到ngx_cycle_t的listening属性中
     if (ngx_add_inherited_sockets(&init_cycle) != NGX_OK) {
         return 1;
     }
@@ -285,7 +285,6 @@ main(int argc, char *const *argv)
     if (ngx_preinit_modules() != NGX_OK) {
         return 1;
     }
-    //填充ngx_cycle_t结构体
     cycle = ngx_init_cycle(&init_cycle);
     if (cycle == NULL) {
         if (ngx_test_config) {
@@ -321,7 +320,6 @@ main(int argc, char *const *argv)
 
         return 0;
     }
-    //nginx -s命令行选项
     if (ngx_signal) {
         return ngx_signal_process(cycle, ngx_signal);
     }
@@ -329,7 +327,6 @@ main(int argc, char *const *argv)
     ngx_os_status(cycle->log);
 
     ngx_cycle = cycle;
-    //根据核心模块配置,确定nginx工作方式
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
 
     if (ccf->master && ngx_process == NGX_PROCESS_SINGLE) {
@@ -341,7 +338,6 @@ main(int argc, char *const *argv)
     if (ngx_init_signals(cycle->log) != NGX_OK) {
         return 1;
     }
-
     if (!ngx_inherited && ccf->daemon) {
         if (ngx_daemon(cycle->log) != NGX_OK) {
             return 1;
@@ -372,7 +368,7 @@ main(int argc, char *const *argv)
     }
 
     ngx_use_stderr = 0;
-
+    //选择Nginx进程模型 
     if (ngx_process == NGX_PROCESS_SINGLE) {
         ngx_single_process_cycle(cycle);
 
@@ -1001,7 +997,9 @@ ngx_process_options(ngx_cycle_t *cycle)
     return NGX_OK;
 }
 
-
+/**
+ * 初始化ngx_core_conf_t配置结构体,属性为类型默认值
+ */
 static void *
 ngx_core_module_create_conf(ngx_cycle_t *cycle)
 {
@@ -1046,7 +1044,9 @@ ngx_core_module_create_conf(ngx_cycle_t *cycle)
     return ccf;
 }
 
-
+/**
+ * 为nginx核心模块的参数设置默认值
+ */
 static char *
 ngx_core_module_init_conf(ngx_cycle_t *cycle, void *conf)
 {

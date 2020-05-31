@@ -8,7 +8,7 @@
             "name": "(lldb) 启动",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/Users/guanjun/nginx/sbin/nginx",
+            "program": "${workspaceFolder}/objs/nginx",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

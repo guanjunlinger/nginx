@@ -100,7 +100,12 @@ static ngx_core_module_t  ngx_events_module_ctx = {
     ngx_event_init_conf
 };
 
-
+/**
+ * nginx事件模块只对events配置项感兴趣
+ * 通过ngx_events_block配置项处理器完成以下工作:
+ *    1.为同类型模块分配ctx_index
+ *    2.触发ngx_event_module_t的create_conf回调
+ */ 
 ngx_module_t  ngx_events_module = {
     NGX_MODULE_V1,
     &ngx_events_module_ctx,                /* module context */
@@ -959,7 +964,6 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     /* count the number of the event modules and set up their indices */
-    //为子模块分配index
     ngx_event_max_module = ngx_count_modules(cf->cycle, NGX_EVENT_MODULE);
 
     ctx = ngx_pcalloc(cf->pool, sizeof(void *));
@@ -980,7 +984,6 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
 
         m = cf->cycle->modules[i]->ctx;
-        //事件模块的create_conf回调 
         if (m->create_conf) {
             (*ctx)[cf->cycle->modules[i]->ctx_index] =
                                                      m->create_conf(cf->cycle);
@@ -994,7 +997,7 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     cf->ctx = ctx;
     cf->module_type = NGX_EVENT_MODULE;
     cf->cmd_type = NGX_EVENT_CONF;
-    //解析nginx.conf配置文件
+ 
     rv = ngx_conf_parse(cf, NULL);
 
     *cf = pcf;
