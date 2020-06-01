@@ -80,7 +80,7 @@ struct ngx_command_s {
     ngx_str_t             name;
     //配置项可以出现的位置和参数数目
     ngx_uint_t            type;
-    //配置项
+    //配置项处理器
     char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
     //配置结构体的偏移量
     ngx_uint_t            conf;

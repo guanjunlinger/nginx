@@ -71,7 +71,13 @@ extern ngx_module_t  ngx_stream_upstream_hash_module;
 extern ngx_module_t  ngx_stream_upstream_least_conn_module;
 extern ngx_module_t  ngx_stream_upstream_random_module;
 extern ngx_module_t  ngx_stream_upstream_zone_module;
-
+/**
+ * nginx支持的模块类型:
+ *    NGX_CORE_MODULE
+ *    NGX_CONF_MODULE
+ *    NGX_EVENT_MODULE 
+ *    NGX_STREAM_MODULE 
+ */ 
 ngx_module_t *ngx_modules[] = {
     &ngx_core_module,
     &ngx_errlog_module,
@@ -142,7 +148,6 @@ ngx_module_t *ngx_modules[] = {
     &ngx_stream_upstream_zone_module,
     NULL
 };
-//nginx支持的模块名列表
 char *ngx_module_names[] = {
     "ngx_core_module",
     "ngx_errlog_module",
