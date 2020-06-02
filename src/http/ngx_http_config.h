@@ -49,13 +49,20 @@ typedef struct {
 #define NGX_HTTP_SRV_CONF_OFFSET   offsetof(ngx_http_conf_ctx_t, srv_conf)
 #define NGX_HTTP_LOC_CONF_OFFSET   offsetof(ngx_http_conf_ctx_t, loc_conf)
 
-
+/**
+ * @r ngx_http_conf_ctx_t结构体指针
+ * @module ngx_module_t结构体对象实例
+ */
 #define ngx_http_get_module_main_conf(r, module)                             \
     (r)->main_conf[module.ctx_index]
 #define ngx_http_get_module_srv_conf(r, module)  (r)->srv_conf[module.ctx_index]
 #define ngx_http_get_module_loc_conf(r, module)  (r)->loc_conf[module.ctx_index]
 
 
+/**
+ * @cf ngx_conf_t结构体指针
+ * @module ngx_module_t结构体对象实例
+ */
 #define ngx_http_conf_get_module_main_conf(cf, module)                        \
     ((ngx_http_conf_ctx_t *) cf->ctx)->main_conf[module.ctx_index]
 #define ngx_http_conf_get_module_srv_conf(cf, module)                         \
@@ -63,6 +70,10 @@ typedef struct {
 #define ngx_http_conf_get_module_loc_conf(cf, module)                         \
     ((ngx_http_conf_ctx_t *) cf->ctx)->loc_conf[module.ctx_index]
 
+/**
+ * @cycle ngx_cycle_t结构体指针
+ * @module ngx_module_t结构体对象实例
+ */
 #define ngx_http_cycle_get_module_main_conf(cycle, module)                    \
     (cycle->conf_ctx[ngx_http_module.index] ?                                 \
         ((ngx_http_conf_ctx_t *) cycle->conf_ctx[ngx_http_module.index])      \

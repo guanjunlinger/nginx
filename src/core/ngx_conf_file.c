@@ -29,7 +29,7 @@ static ngx_command_t  ngx_conf_commands[] = {
 };
 
 /**
- * nginx配置模块近支持include指令加载外部配置文件
+ * nginx配置模块仅支持include指令加载外部配置文件
  */ 
 ngx_module_t  ngx_conf_module = {
     NGX_MODULE_V1,

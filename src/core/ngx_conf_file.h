@@ -128,7 +128,6 @@ struct ngx_conf_s {
     ngx_pool_t           *temp_pool;
     ngx_conf_file_t      *conf_file;
     ngx_log_t            *log;
-
     void                 *ctx;
     ngx_uint_t            module_type;
     //指令类型
