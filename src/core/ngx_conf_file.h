@@ -47,9 +47,12 @@
 #define NGX_CONF_1MORE       0x00000800
 #define NGX_CONF_2MORE       0x00001000
 
+//标志配置结构体已经创建
 #define NGX_DIRECT_CONF      0x00010000
 
+//单独出现表示配置结构体还未创建
 #define NGX_MAIN_CONF        0x01000000
+//该指令可以出现在任意配置级别上
 #define NGX_ANY_CONF         0xFF000000
 
 
