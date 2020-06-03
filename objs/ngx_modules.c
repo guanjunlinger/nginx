@@ -83,9 +83,9 @@ extern ngx_module_t  ngx_stream_upstream_zone_module;
  * 
  * 模块名                      模块配置结构体
  * ngx_core_module            ngx_core_conf_t
- * ngx_conf_module            无
+ * ngx_conf_module            
  * ngx_regex_module           ngx_regex_conf_t
- * ngx_events_module          无
+ * ngx_events_module          为NGX_EVENT_MODULE类型模块初始化配置指针数组
  * ngx_event_core_module      ngx_event_conf_t
  * ngx_kqueue_module          ngx_kqueue_conf_t
  * ngx_http_module            ngx_http_conf_ctx_t
