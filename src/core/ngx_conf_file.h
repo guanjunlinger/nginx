@@ -81,7 +81,7 @@
 struct ngx_command_s {
     //配置项名称
     ngx_str_t             name;
-    //配置项可以出现的位置和参数数目
+    //配置项可以出现的位置,参数数目和配置结构体是否创建
     ngx_uint_t            type;
     //配置项处理器
     char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);

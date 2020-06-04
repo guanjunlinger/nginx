@@ -454,15 +454,16 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
             conf = NULL;
 
             if (cmd->type & NGX_DIRECT_CONF) {
-                //核心模块的配置项
+                //配置结构体已经创建
                 conf = ((void **) cf->ctx)[cf->cycle->modules[i]->index];
 
             } else if (cmd->type & NGX_MAIN_CONF) {
+                //配置结构体还没创建
                 conf = &(((void **) cf->ctx)[cf->cycle->modules[i]->index]);
 
             } else if (cf->ctx) {
-                //非核心模块的配置项结构体地址定位
-                confp = *(void **) ((char *) cf->ctx + cmd->conf);
+            //处于块配置指令上下文中  
+            confp = *(void **) ((char *) cf->ctx + cmd->conf);
 
                 if (confp) {
                     conf = confp[cf->cycle->modules[i]->ctx_index];

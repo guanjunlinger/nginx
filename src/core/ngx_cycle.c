@@ -220,7 +220,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     /**
      * 查找nginx核心模块的上下文结构体ngx_core_module_t
      * 执行ngx_core_module_t的create_conf回调
-     * 将返回的ngx_core_conf_t结构体指针保存到conf_ctx数组对应的位置
+     * 将返回的配置结构体指针保存到conf_ctx数组对应的位置
      */ 
     for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->type != NGX_CORE_MODULE) {
