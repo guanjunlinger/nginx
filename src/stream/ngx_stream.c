@@ -135,6 +135,7 @@ ngx_stream_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         mi = cf->cycle->modules[m]->ctx_index;
 
         if (module->create_main_conf) {
+            //触发ngx_stream_module_t的create_main_conf回调
             ctx->main_conf[mi] = module->create_main_conf(cf);
             if (ctx->main_conf[mi] == NULL) {
                 return NGX_CONF_ERROR;
@@ -142,6 +143,7 @@ ngx_stream_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
 
         if (module->create_srv_conf) {
+            //触发ngx_stream_module_t的create_srv_conf回调
             ctx->srv_conf[mi] = module->create_srv_conf(cf);
             if (ctx->srv_conf[mi] == NULL) {
                 return NGX_CONF_ERROR;
@@ -161,6 +163,7 @@ ngx_stream_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         module = cf->cycle->modules[m]->ctx;
 
         if (module->preconfiguration) {
+            //触发ngx_stream_module_t的preconfiguration回调
             if (module->preconfiguration(cf) != NGX_OK) {
                 return NGX_CONF_ERROR;
             }
@@ -198,6 +201,7 @@ ngx_stream_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         cf->ctx = ctx;
 
         if (module->init_main_conf) {
+             //触发ngx_stream_module_t的init_main_conf回调
             rv = module->init_main_conf(cf, ctx->main_conf[mi]);
             if (rv != NGX_CONF_OK) {
                 *cf = pcf;
@@ -212,6 +216,7 @@ ngx_stream_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             cf->ctx = cscfp[s]->ctx;
 
             if (module->merge_srv_conf) {
+                 //触发ngx_stream_module_t的merge_srv_conf回调
                 rv = module->merge_srv_conf(cf,
                                             ctx->srv_conf[mi],
                                             cscfp[s]->ctx->srv_conf[mi]);
@@ -226,7 +231,7 @@ ngx_stream_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     if (ngx_stream_init_phases(cf, cmcf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
-
+    //触发ngx_stream_module_t的postconfiguration回调
     for (m = 0; cf->cycle->modules[m]; m++) {
         if (cf->cycle->modules[m]->type != NGX_STREAM_MODULE) {
             continue;

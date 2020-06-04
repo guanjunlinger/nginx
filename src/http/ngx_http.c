@@ -99,19 +99,6 @@ static ngx_core_module_t  ngx_http_module_ctx = {
     NULL
 };
 
-/**
- * http模块只对http配置项感兴趣
- * 注册ngx_http_block处理器完成以下工作:
- *    初始化NGX_HTTP_MODULE类型模块的ctx_index 
- *    初始化ngx_http_conf_ctx_t结构体,为属性分配指针数组
- *    依次执行所有NGX_HTTP_MODULE类型模块ngx_http_module_t上下文结构体的以下回调
- *      1.create_main_conf
- *      2.create_srv_conf
- *      3.create_loc_conf 
- *      4.preconfiguration 
- *     
- * 
- */
 ngx_module_t  ngx_http_module = {
     NGX_MODULE_V1,
     &ngx_http_module_ctx,                  /* module context */
@@ -154,7 +141,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
     /* count the number of the http modules and set up their indices */
-
+    //初始化NGX_HTTP_MODULE类型模块的ctx_index 
     ngx_http_max_module = ngx_count_modules(cf->cycle, NGX_HTTP_MODULE);
 
 
@@ -202,14 +189,14 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         module = cf->cycle->modules[m]->ctx;
         mi = cf->cycle->modules[m]->ctx_index;
-
+        //执行NGX_HTTP_MODULE类型模块ngx_http_module_t的create_main_conf回调     
         if (module->create_main_conf) {
             ctx->main_conf[mi] = module->create_main_conf(cf);
             if (ctx->main_conf[mi] == NULL) {
                 return NGX_CONF_ERROR;
             }
         }
-
+        // 执行NGX_HTTP_MODULE类型模块ngx_http_module_t的create_srv_conf回调
         if (module->create_srv_conf) {
             ctx->srv_conf[mi] = module->create_srv_conf(cf);
             if (ctx->srv_conf[mi] == NULL) {
@@ -218,6 +205,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
 
         if (module->create_loc_conf) {
+             // 执行NGX_HTTP_MODULE类型模块ngx_http_module_t的create_loc_conf回调
             ctx->loc_conf[mi] = module->create_loc_conf(cf);
             if (ctx->loc_conf[mi] == NULL) {
                 return NGX_CONF_ERROR;
@@ -226,8 +214,9 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     pcf = *cf;
+    //记录当前配置上下文为HTTP模块配置结构体指针数组
     cf->ctx = ctx;
-
+    //执行NGX_HTTP_MODULE类型模块ngx_http_module_t的preconfiguration回调
     for (m = 0; cf->cycle->modules[m]; m++) {
         if (cf->cycle->modules[m]->type != NGX_HTTP_MODULE) {
             continue;
