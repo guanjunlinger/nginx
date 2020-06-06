@@ -71,7 +71,7 @@ typedef struct {
     u_char              *end;
 } ngx_http_status_t;
 
-
+//HTTP请求上下文宏方法
 #define ngx_http_get_module_ctx(r, module)  (r)->ctx[module.ctx_index]
 #define ngx_http_set_ctx(r, c, module)      r->ctx[module.ctx_index] = c;
 

@@ -507,7 +507,7 @@ ngx_http_upstream_create(ngx_http_request_t *r)
     return NGX_OK;
 }
 
-
+//启动upstream流程
 void
 ngx_http_upstream_init(ngx_http_request_t *r)
 {
@@ -563,7 +563,7 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
     u = r->upstream;
 
 #if (NGX_HTTP_CACHE)
-
+    //检测文件缓存 
     if (u->conf->cache) {
         ngx_int_t  rc;
 
@@ -608,7 +608,6 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
     u->store = u->conf->store;
 
     if (!u->store && !r->post_action && !u->conf->ignore_client_abort) {
-        //检测下游服务器连接状态
         r->read_event_handler = ngx_http_upstream_rd_check_broken_connection;
         r->write_event_handler = ngx_http_upstream_wr_check_broken_connection;
     }
@@ -616,7 +615,7 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
     if (r->request_body) {
         u->request_bufs = r->request_body->bufs;
     }
-
+    //回调ngx_http_upstream_t的create_request方法
     if (u->create_request(r) != NGX_OK) {
         ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
         return;

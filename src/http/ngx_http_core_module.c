@@ -4294,8 +4294,9 @@ ngx_http_core_root(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     clcf->alias = alias ? clcf->name.len : 0;
+    //记录root或alias指令的参数值
     clcf->root = value[1];
-
+    //root指令去掉末尾的/
     if (!alias && clcf->root.len > 0
         && clcf->root.data[clcf->root.len - 1] == '/')
     {

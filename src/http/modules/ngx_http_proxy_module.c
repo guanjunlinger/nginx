@@ -855,7 +855,7 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
 #if (NGX_HTTP_CACHE)
     ngx_http_proxy_main_conf_t  *pmcf;
 #endif
-
+    //初始化ngx_http_request_t的upstream属性 
     if (ngx_http_upstream_create(r) != NGX_OK) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
@@ -864,7 +864,7 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
     if (ctx == NULL) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
-    //将请求上下文保存到ngx_http_request_t结构体中
+    //保存请求上下文保存到ngx_http_request_t结构体中
     ngx_http_set_ctx(r, ctx, ngx_http_proxy_module);
 
     plcf = ngx_http_get_module_loc_conf(r, ngx_http_proxy_module);
@@ -933,7 +933,7 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
     {
         r->request_body_no_buffering = 1;
     }
-    //读取请求体,并注册ngx_http_upstream_init为后处理器
+    //异步读取请求体,注册请求处理器
     rc = ngx_http_read_client_request_body(r, ngx_http_upstream_init);
 
     if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
@@ -3588,7 +3588,7 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);
-
+    //设置当前HTTP请求处理器为ngx_http_proxy_handler
     clcf->handler = ngx_http_proxy_handler;
 
     if (clcf->name.len && clcf->name.data[clcf->name.len - 1] == '/') {
