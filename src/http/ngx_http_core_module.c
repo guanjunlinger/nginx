@@ -1164,6 +1164,7 @@ ngx_http_core_content_phase(ngx_http_request_t *r,
     ngx_str_t  path;
 
     if (r->content_handler) {
+        //优先执行location块配置的content handler
         r->write_event_handler = ngx_http_request_empty_handler;
         ngx_http_finalize_request(r, r->content_handler(r));
         return NGX_OK;
@@ -2221,7 +2222,11 @@ ngx_http_gzip_quantity(u_char *p, u_char *last)
  @psr  创建的子请求
  @ps   子请求结束的回调方法
  @flags 设置子请求标志位相关的宏定义
-
+   
+NGX_OK:the subrequest finished without touching the network（成功建立子请求）；
+NGX_DONE:the client reset the network connection（客户端重置网络连接）；
+NGX_ERROR:there was a server error of some sort（建立子请求失败）；
+NGX_AGAIN:the subrequest requires network activity（子请求需要激活网络）；
  */
 ngx_int_t
 ngx_http_subrequest(ngx_http_request_t *r,
@@ -2327,9 +2332,11 @@ ngx_http_subrequest(ngx_http_request_t *r,
     sr->schema = r->schema;
 
     ngx_http_set_exten(sr);
-
+       /* 原始请求 */
     sr->main = r->main;
+    /* 当前请求，即新创建子请求的父请求 */
     sr->parent = r;
+    /* 子请求执行结束时的回调方法 */
     sr->post_subrequest = ps;
     sr->read_event_handler = ngx_http_request_empty_handler;
     sr->write_event_handler = ngx_http_handler;
@@ -2355,7 +2362,7 @@ ngx_http_subrequest(ngx_http_request_t *r,
         pr->request = sr;
         pr->out = NULL;
         pr->next = NULL;
-
+        /* 把子请求挂载到其父请求的postponed链表队尾 */
         if (r->postponed) {
             for (p = r->postponed; p->next; p = p->next) { /* void */ }
             p->next = pr;
@@ -2364,7 +2371,7 @@ ngx_http_subrequest(ngx_http_request_t *r,
             r->postponed = pr;
         }
     }
-
+    /* 子请求为内部请求 */
     sr->internal = 1;
 
     sr->discard_body = r->discard_body;
@@ -2377,7 +2384,7 @@ ngx_http_subrequest(ngx_http_request_t *r,
     tp = ngx_timeofday();
     sr->start_sec = tp->sec;
     sr->start_msec = tp->msec;
-
+    /* 增加原始请求的引用计数 */
     r->main->count++;
 
     *psr = sr;
@@ -2402,7 +2409,7 @@ ngx_http_subrequest(ngx_http_request_t *r,
 
         ngx_http_update_location_config(sr);
     }
-
+     /* 将子请求挂载到原始请求的posted_requests链表队尾 */
     return ngx_http_post_request(sr, NULL);
 }
 

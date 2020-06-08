@@ -244,6 +244,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     /*
      * init http{} main_conf's, merge the server{}s' srv_conf's
      * and its location{}s' loc_conf's
+     * 进行server和location配置项的合并
      */
 
     cmcf = ctx->main_conf[ngx_http_core_module.ctx_index];
@@ -297,7 +298,9 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-    //执行ngx_http_module_t的postconfiguration回调 
+    /**执行ngx_http_module_t的postconfiguration回调
+     * 一般用来挂载HTTP阶段处理器
+    */ 
     for (m = 0; cf->cycle->modules[m]; m++) {
         if (cf->cycle->modules[m]->type != NGX_HTTP_MODULE) {
             continue;

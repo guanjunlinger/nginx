@@ -374,7 +374,7 @@ typedef void (*ngx_http_event_handler_pt)(ngx_http_request_t *r);
 struct ngx_http_request_s {
     uint32_t                          signature;         /* "HTTP" */
     ngx_connection_t                 *connection;
-    //保留所有HTTP模块产生的请求上下文信息
+    //存储所有HTTP模块请求上下文
     void                            **ctx;
     void                            **main_conf;
     void                            **srv_conf;
@@ -425,9 +425,9 @@ struct ngx_http_request_s {
     ngx_http_postponed_request_t     *postponed;
     ngx_http_post_subrequest_t       *post_subrequest;
     ngx_http_posted_request_t        *posted_requests;
-
     ngx_int_t                         phase_handler;
     ngx_http_handler_pt               content_handler;
+     //若为0表示具备权限
     ngx_uint_t                        access_code;
 
     ngx_http_variable_value_t        *variables;
@@ -452,9 +452,9 @@ struct ngx_http_request_s {
     ngx_http_v2_stream_t             *stream;
 
     ngx_http_log_handler_pt           log_handler;
-
+    
     ngx_http_cleanup_t               *cleanup;
-
+    //子请求的数目
     unsigned                          count:16;
     unsigned                          subrequests:8;
     unsigned                          blocked:8;
@@ -492,7 +492,7 @@ struct ngx_http_request_s {
     unsigned                          request_body_file_group_access:1;
     unsigned                          request_body_file_log_level:3;
     unsigned                          request_body_no_buffering:1;
-    
+    //若该标志位为1，表示不转发响应，否则转发响应
     unsigned                          subrequest_in_memory:1;
     unsigned                          waited:1;
 
@@ -548,7 +548,7 @@ struct ngx_http_request_s {
     unsigned                          root_tested:1;
     unsigned                          done:1;
     unsigned                          logged:1;
-
+     /* 标志位，表示缓冲区是否存在待发送内容 */
     unsigned                          buffered:4;
 
     unsigned                          main_filter_need_in_memory:1;

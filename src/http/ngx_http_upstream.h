@@ -147,17 +147,21 @@ typedef struct {
 
 
 typedef struct {
+        /*
+     * 若在ngx_http_upstream_t结构体中没有实现resolved成员时，
+     * upstream这个结构体才会生效，定义上游服务器的配置；
+     */
     ngx_http_upstream_srv_conf_t    *upstream;
 
     ngx_msec_t                       connect_timeout;
     ngx_msec_t                       send_timeout;
     ngx_msec_t                       read_timeout;
     ngx_msec_t                       next_upstream_timeout;
-
+     /* TCP的SO_SNOLOWAT选项，表示发送缓冲区的下限 */ 
     size_t                           send_lowat;
     size_t                           buffer_size;
     size_t                           limit_rate;
-
+      /* ngx_http_upstream_t中的buffer大小 */
     size_t                           busy_buffers_size;
     size_t                           max_temp_file_size;
     size_t                           temp_file_write_size;
@@ -172,6 +176,10 @@ typedef struct {
     ngx_uint_t                       next_upstream;
     ngx_uint_t                       store_access;
     ngx_uint_t                       next_upstream_tries;
+    /*
+     * 转发响应方式的标志位，为1表示启用更多内存和磁盘文件缓存来自上游响应(即上游网速优先)；
+     * 若为0，则启用固定内存大小缓存上游响应(即下游网速优先)；
+     */
     ngx_flag_t                       buffering;
     ngx_flag_t                       request_buffering;
     ngx_flag_t                       pass_request_headers;
@@ -184,9 +192,8 @@ typedef struct {
     ngx_flag_t                       force_ranges;
 
     ngx_path_t                      *temp_path;
-
+       /* 不转发的头部 */
     ngx_hash_t                       hide_headers_hash;
-    //隐藏的头部列表
     ngx_array_t                     *hide_headers;
     ngx_array_t                     *pass_headers;
 
@@ -216,7 +223,12 @@ typedef struct {
     ngx_array_t                     *cache_purge;
     ngx_array_t                     *no_cache;
 #endif
-
+      /*
+     * 当ngx_http_upstream_t 中的store标志位为1时，
+     * 如果需要将上游的响应存放在文件中，
+     * store_lengths表示存放路径的长度；
+     * store_values表示存放路径；
+     */
     ngx_array_t                     *store_lengths;
     ngx_array_t                     *store_values;
 
@@ -226,6 +238,7 @@ typedef struct {
     signed                           store:2;
     //404直接转发错误码
     unsigned                         intercept_404:1;
+     /* 根据返回的响应头部，动态决定是以上游网速还是下游网速优先 */
     unsigned                         change_buffering:1;
     unsigned                         pass_trailers:1;
     unsigned                         preserve_output:1;
@@ -319,18 +332,20 @@ typedef void (*ngx_http_upstream_handler_pt)(ngx_http_request_t *r,
 
 
 struct ngx_http_upstream_s {
+     /* 处理读事件的回调方法，每一个阶段都有不同的 read_event_handler */
     ngx_http_upstream_handler_pt     read_event_handler;
+      /* 处理写事件的回调方法，每一个阶段都有不同的 write_event_handler */
     ngx_http_upstream_handler_pt     write_event_handler;
     //主动向上游服务器发起的连接
     ngx_peer_connection_t            peer;
 
     ngx_event_pipe_t                *pipe;
-
+    //发送给上游服务器的请求 
     ngx_chain_t                     *request_bufs;
 
     ngx_output_chain_ctx_t           output;
     ngx_chain_writer_ctx_t           writer;
-    //upstream模块配置信息
+ 
     ngx_http_upstream_conf_t        *conf;
     ngx_http_upstream_srv_conf_t    *upstream;
 #if (NGX_HTTP_CACHE)
@@ -338,22 +353,23 @@ struct ngx_http_upstream_s {
 #endif
     
     ngx_http_upstream_headers_in_t   headers_in;
-    //设置上游服务器地址
+    /* 解析主机域名，用于直接指定的上游服务器地址 */
     ngx_http_upstream_resolved_t    *resolved;
 
     ngx_buf_t                        from_client;
-    /**
-     * a.在process_header回调时，存储响应包头
-     * b.buffering=1,upstream向下游转发包体时,无意义
-     * c.buffering=0,反复接受上游包体,向下游转发
-     * 
+     /*
+     * 接收上游服务器响应包头的缓冲区
      */
     ngx_buf_t                        buffer;
     //上游服务器响应包体的长度
     off_t                            length;
 
     ngx_chain_t                     *out_bufs;
+     /*
+     * 当需要向下游转发响应包体时，它表示上一次向下游转发响应时没有发送完的内容；
+     */
     ngx_chain_t                     *busy_bufs;
+    //回收out_bufs中已经发送给下游的ngx_buf_t结构体；
     ngx_chain_t                     *free_bufs;
 
     ngx_int_t                      (*input_filter_init)(void *data);
@@ -365,10 +381,22 @@ struct ngx_http_upstream_s {
 #endif
     ngx_int_t                      (*create_request)(ngx_http_request_t *r);
     ngx_int_t                      (*reinit_request)(ngx_http_request_t *r);
+       /*
+     * 解析上游服务器返回的响应包头，该函数返回四个值中的一个：
+     * NGX_AGAIN                            表示包头没有接收完整；
+     * NGX_HTTP_UPSTREAM_INVALID_HEADER     表示包头不合法；
+     * NGX_ERROR                            表示出现错误；
+     * NGX_OK                               表示解析到完整的包头；
+     */
     ngx_int_t                      (*process_header)(ngx_http_request_t *r);
     void                           (*abort_request)(ngx_http_request_t *r);
     void                           (*finalize_request)(ngx_http_request_t *r,
                                          ngx_int_t rc);
+                                           /*
+     * 在上游返回的响应出现location或者refresh头部表示重定向时，
+     * 会通过ngx_http_upstream_process_headers方法调用到可由HTTP模块
+     * 实现的rewrite_redirect方法；
+     */
     ngx_int_t                      (*rewrite_redirect)(ngx_http_request_t *r,
                                          ngx_table_elt_t *h, size_t prefix);
     ngx_int_t                      (*rewrite_cookie)(ngx_http_request_t *r,
@@ -389,23 +417,22 @@ struct ngx_http_upstream_s {
     ngx_http_cleanup_pt             *cleanup;
 
     unsigned                         store:1;
+    /* 启用文件缓存 */
     unsigned                         cacheable:1;
     unsigned                         accel:1;
     unsigned                         ssl:1;
 #if (NGX_HTTP_CACHE)
     unsigned                         cache_status:3;
 #endif
-   /**
-    *   0:只使用buffer缓冲区转发响应包体
-    *   1:使用多个缓冲区和磁盘文件转发包体 
-    */ 
+ /* 开启更大的内存及临时磁盘文件用于缓存来不及发送到下游的响应包体 */
     unsigned                         buffering:1;
     unsigned                         keepalive:1;
     unsigned                         upgrade:1;
-
+    /* 表示是否已向上游服务器发送请求 */
     unsigned                         request_sent:1;
     unsigned                         request_body_sent:1;
     unsigned                         request_body_blocked:1;
+     /* 表示是否已经转发响应报头 */
     unsigned                         header_sent:1;
 };
 

@@ -2507,7 +2507,7 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
             ngx_http_finalize_connection(r);
             return;
         }
-
+         /* 该子请求还有未处理完的数据或者子请求 */
         if (r->buffered || r->postponed) {
 
             if (ngx_http_set_write_handler(r) != NGX_OK) {
@@ -2518,7 +2518,7 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
         }
 
         pr = r->parent;
-
+        /* 该子请求已经处理完毕，如果它拥有发送数据的权利，则将权利移交给父请求， */ 
         if (r == c->data) {
 
             r->main->count--;
@@ -2537,7 +2537,7 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
             }
 
             r->done = 1;
-
+             /* 如果该子请求不是提前完成，则从父请求的postponed链表中删除 */  
             if (pr->postponed && pr->postponed->request == r) {
                 pr->postponed = pr->postponed->next;
             }
@@ -2556,7 +2556,7 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
                 r->done = 1;
             }
         }
-
+            /* 将父请求加入posted_request队尾，获得一次运行机会 */
         if (ngx_http_post_request(pr, NULL) != NGX_OK) {
             r->main->count++;
             ngx_http_terminate_request(r, 0);
@@ -2569,7 +2569,9 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
 
         return;
     }
-
+     /* 如果主请求有未发送的数据或者未处理的子请求，
+     * 则给主请求添加写事件，并设置合适的write event hander，
+     * 以便下次写事件来的时候继续处理 */
     if (r->buffered || c->buffered || r->postponed) {
 
         if (ngx_http_set_write_handler(r) != NGX_OK) {
