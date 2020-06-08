@@ -28,6 +28,7 @@ typedef struct {
 
 
 struct ngx_event_s {
+      /* 事件相关对象的数据，通常指向ngx_connect_t连接对象 */
     void            *data;
 
     unsigned         write:1;
@@ -55,11 +56,11 @@ struct ngx_event_s {
 
     unsigned         eof:1;
     unsigned         error:1;
-
+    //事件已超时
     unsigned         timedout:1;
-    //定时器标志位
+    //事件存在于定时器中
     unsigned         timer_set:1;
-
+    //TCP建立连接需要延迟 
     unsigned         delayed:1;
 
     unsigned         deferred_accept:1;
@@ -167,14 +168,14 @@ struct ngx_event_aio_s {
 
 #endif
 
-
+/* IO多路复用模型的统一接口 */
 typedef struct {
     ngx_int_t  (*add)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
     ngx_int_t  (*del)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
 
     ngx_int_t  (*enable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
     ngx_int_t  (*disable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
-
+    /* 将指定连接所关联的描述符添加到事件驱动机制监控中 */
     ngx_int_t  (*add_conn)(ngx_connection_t *c);
     ngx_int_t  (*del_conn)(ngx_connection_t *c, ngx_uint_t flags);
 
@@ -182,7 +183,8 @@ typedef struct {
 
     ngx_int_t  (*process_events)(ngx_cycle_t *cycle, ngx_msec_t timer,
                                  ngx_uint_t flags);
-
+    
+    /* 初始化事件驱动模块 */
     ngx_int_t  (*init)(ngx_cycle_t *cycle, ngx_msec_t timer);
     void       (*done)(ngx_cycle_t *cycle);
 } ngx_event_actions_t;
@@ -436,12 +438,12 @@ typedef struct {
     ngx_uint_t    connections;
     //当前模块在事件模块的序号
     ngx_uint_t    use;
-
+    //允许批量建立连接
     ngx_flag_t    multi_accept;
     ngx_flag_t    accept_mutex;
-
+    
     ngx_msec_t    accept_mutex_delay;
-
+    //被使用的事件模块名称
     u_char       *name;
 
 #if (NGX_DEBUG)

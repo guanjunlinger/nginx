@@ -65,7 +65,7 @@ ngx_event_accept(ngx_event_t *ev)
 #else
         s = accept(lc->fd, &sa.sockaddr, &socklen);
 #endif
-
+        //连接失败处理
         if (s == (ngx_socket_t) -1) {
             err = ngx_socket_errno;
 
@@ -133,7 +133,12 @@ ngx_event_accept(ngx_event_t *ev)
 #if (NGX_STAT_STUB)
         (void) ngx_atomic_fetch_add(ngx_stat_accepted, 1);
 #endif
-        //设置负载均衡阈值 
+         /*
+         * ngx_accept_disabled 变量是负载均衡阈值，表示进程是否超载；
+         * 设置负载均衡阈值为每个进程最大连接数的八分之一减去空闲连接数；
+         * 即当每个进程accept到的活动连接数超过最大连接数的7/8时，
+         * ngx_accept_disabled 大于0，表示该进程处于负载过重；
+         */
         ngx_accept_disabled = ngx_cycle->connection_n / 8
                               - ngx_cycle->free_connection_n;
 
@@ -191,6 +196,7 @@ ngx_event_accept(ngx_event_t *ev)
             }
 
         } else {
+            /* 使用epoll模型时，套接字的属性为非阻塞模式 */
             if (!(ngx_event_flags & NGX_USE_IOCP_EVENT)) {
                 if (ngx_nonblocking(s) == -1) {
                     ngx_log_error(NGX_LOG_ALERT, ev->log, ngx_socket_errno,
@@ -229,7 +235,7 @@ ngx_event_accept(ngx_event_t *ev)
 
         rev = c->read;
         wev = c->write;
-
+        
         wev->ready = 1;
 
         if (ngx_event_flags & NGX_USE_IOCP_EVENT) {
@@ -295,7 +301,11 @@ ngx_event_accept(ngx_event_t *ev)
 
         }
 #endif
-
+          /* 将新连接对应的读事件注册到事件监控机制中；
+         * 注意：若是epoll事件机制，这里是不会执行，
+         * 因为epoll事件机制会在调用新连接处理函数ls->handler(c)
+         *（实际调用ngx_http_init_connection）时，才会把新连接对应的读事件注册到epoll事件机制中；
+         */
         if (ngx_add_conn && (ngx_event_flags & NGX_USE_EPOLL_EVENT) == 0) {
             if (ngx_add_conn(c) == NGX_ERROR) {
                 ngx_close_accepted_connection(c);
@@ -305,7 +315,10 @@ ngx_event_accept(ngx_event_t *ev)
 
         log->data = NULL;
         log->handler = NULL;
-        //执行ngx_listening_t的回调方法
+          /*
+         * 设置回调函数，完成新连接的最后初始化工作，
+         * 由函数ngx_http_init_connection完成
+         */
         ls->handler(c);
 
         if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) {
@@ -318,7 +331,7 @@ ngx_event_accept(ngx_event_t *ev)
 
 ngx_int_t
 ngx_trylock_accept_mutex(ngx_cycle_t *cycle)
-{   
+{   /* 获取ngx_accept_mutex锁，成功返回1，失败返回0 */
     if (ngx_shmtx_trylock(&ngx_accept_mutex)) {
 
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
@@ -326,13 +339,14 @@ ngx_trylock_accept_mutex(ngx_cycle_t *cycle)
         if (ngx_accept_mutex_held && ngx_accept_events == 0) {
             return NGX_OK;
         }
-
+        /* 将所有监听连接的读事件添加到当前的epoll事件驱动模块中 */ 
         if (ngx_enable_accept_events(cycle) == NGX_ERROR) {
             ngx_shmtx_unlock(&ngx_accept_mutex);
             return NGX_ERROR;
         }
 
         ngx_accept_events = 0;
+        /* 表示当前进程已经得到ngx_accept_mutex锁 */
         ngx_accept_mutex_held = 1;
 
         return NGX_OK;

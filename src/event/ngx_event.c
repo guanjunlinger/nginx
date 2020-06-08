@@ -217,7 +217,7 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
     }
 
     if (ngx_use_accept_mutex) {
-        //触发子进程负载均衡
+        /* 通过负载阈值ngx_accept_disabled控制进程是否处理新连接事件，避免进程间负载均衡问题 */
         if (ngx_accept_disabled > 0) {
             ngx_accept_disabled--;
 
@@ -493,12 +493,17 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     {
     ngx_int_t      limit;
     struct rlimit  rlmt;
-
+     /* 获取当前进程所打开的最大文件描述符个数 */
     if (getrlimit(RLIMIT_NOFILE, &rlmt) == -1) {
         ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                       "getrlimit(RLIMIT_NOFILE) failed, ignored");
 
     } else {
+          /*
+         * 当前事件模块的连接数大于最大文件描述符个数，
+         * 或者大于由配置文件nginx.conf指定的worker_rlinit_nofile设置的最大文件描述符个数时，
+         * 出错返回；
+         */
         if (ecf->connections > (ngx_uint_t) rlmt.rlim_cur
             && (ccf->rlimit_nofile == NGX_CONF_UNSET
                 || ecf->connections > (ngx_uint_t) ccf->rlimit_nofile))
@@ -515,11 +520,16 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     }
 #endif /* !(NGX_WIN32) */
 
-
+       /*
+     * 模块ngx_core_module的master进程为0，表示不创建worker进程，
+     * 则初始化到此结束
+     */
     if (ccf->master == 0) {
         return NGX_OK;
     }
-
+     /*
+     * 若master不为0，且存在负载均衡锁，则表示初始化完毕，并成功返回；
+     */
     if (ngx_accept_mutex_ptr) {
         return NGX_OK;
     }
@@ -528,13 +538,28 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     /* cl should be equal to or greater than cache line size */
 
     cl = 128;
-
+         /*
+     * 统计需要创建的共享内存大小；
+     * ngx_accept_mutex用于多个worker进程之间的负载均衡锁；
+     * ngx_connection_counter表示nginx处理的连接总数；
+     * ngx_temp_number表示在连接中创建的临时文件个数；
+     */
     size = cl            /* ngx_accept_mutex */
            + cl          /* ngx_connection_counter */
            + cl;         /* ngx_temp_number */
 
 #if (NGX_STAT_STUB)
-
+     
+    /*
+     * 下面表示某种情况的连接数；
+     * ngx_stat_accepted    表示已成功建立的连接数；
+     * ngx_stat_handled     表示已获取ngx_connection_t结构并已初始化读写事件的连接数；
+     * ngx_stat_requests    表示已被http模块处理过的连接数；
+     * ngx_stat_active      表示已获取ngx_connection_t结构体的连接数；
+     * ngx_stat_reading     表示正在接收TCP字符流的连接数；
+     * ngx_stat_writing     表示正在发送TCP字符流的连接数；
+     * ngx_stat_waiting     表示正在等待事件发生的连接数；
+     */
     size += cl           /* ngx_stat_accepted */
            + cl          /* ngx_stat_handled */
            + cl          /* ngx_stat_requests */
@@ -556,6 +581,7 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     shared = shm.addr;
 
     ngx_accept_mutex_ptr = (ngx_atomic_t *) shared;
+     /* -1表示以非阻塞模式获取共享内存锁 */
     ngx_accept_mutex.spin = (ngx_uint_t) -1;
 
     if (ngx_shmtx_create(&ngx_accept_mutex, (ngx_shmtx_sh_t *) shared,
@@ -623,7 +649,11 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
     ecf = ngx_event_get_conf(cycle->conf_ctx, ngx_event_core_module);
-    //是否启用accept锁
+       /*
+     * 在事件核心模块启用accept_mutex锁的情况下，
+     * 只有在master-worker工作模式并且worker进程数量大于1，
+     * 进程启用负载均衡锁；
+     */
     if (ccf->master && ccf->worker_processes > 1 && ecf->accept_mutex) {
         ngx_use_accept_mutex = 1;
         ngx_accept_mutex_held = 0;
@@ -672,6 +702,11 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     }
 
 #if !(NGX_WIN32)
+    /*
+     * NGX_USE_TIMER_EVENT只有在eventport和kqueue事件模型中使用，
+     * 若配置文件nginx.conf设置了timer_resolution配置项，
+     * 并且事件模型不为eventport和kqueue时，调用settimer方法，
+     */
     if (ngx_timer_resolution && !(ngx_event_flags & NGX_USE_TIMER_EVENT)) {
         struct sigaction  sa;
         struct itimerval  itv;
@@ -690,13 +725,13 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         itv.it_interval.tv_usec = (ngx_timer_resolution % 1000) * 1000;
         itv.it_value.tv_sec = ngx_timer_resolution / 1000;
         itv.it_value.tv_usec = (ngx_timer_resolution % 1000 ) * 1000;
-        //定时向进程发送SIGALRM信号
+         /* 使用settimer函数发送信号 SIGALRM */
         if (setitimer(ITIMER_REAL, &itv, NULL) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           "setitimer() failed");
         }
     }
-
+    /* 对poll、/dev/poll、rtsig事件模块的特殊处理 */
     if (ngx_event_flags & NGX_USE_FD_EVENT) {
         struct rlimit  rlmt;
 
@@ -758,7 +793,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
     i = cycle->connection_n;
     next = NULL;
-
+   /* 按照序号，将读、写事件与连接对象对应，即设置到每个ngx_connection_t 对象中 */
     do {
         i--;
 
@@ -850,12 +885,13 @@ ngx_event_process_init(ngx_cycle_t *cycle)
             }
 
         } else {
+              /* 为监听端口的读事件设置处理方法ngx_event_accept */
             rev->handler = ngx_event_accept;
 
             if (ngx_use_accept_mutex) {
                 continue;
             }
-
+            /* 将监听对象连接的读事件添加到事件驱动模块中 */
             if (ngx_add_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR) {
                 return NGX_ERROR;
             }

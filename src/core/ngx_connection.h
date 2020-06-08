@@ -148,6 +148,7 @@ struct ngx_connection_s {
 
     struct sockaddr    *sockaddr;
     socklen_t           socklen;
+    /* 字符串形式的IP地址 */
     ngx_str_t           addr_text;
 
     ngx_proxy_protocol_t  *proxy_protocol;
@@ -183,7 +184,7 @@ struct ngx_connection_s {
     unsigned            shared:1;
 
     unsigned            sendfile:1;
-    //套接字缓冲区满足最低阈值要求
+    //套接字缓冲区满足最低阈值
     unsigned            sndlowat:1;
     //TCP的nodelay特性
     unsigned            tcp_nodelay:2;   /* ngx_connection_tcp_nodelay_e */

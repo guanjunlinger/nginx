@@ -100,7 +100,9 @@ struct io_event {
 
 
 typedef struct {
+    /* 表示epoll_wait函数返回的最大事件数 */
     ngx_uint_t  events;
+     /* 并发处理异步IO事件个数 */
     ngx_uint_t  aio_requests;
 } ngx_epoll_conf_t;
 
@@ -353,7 +355,7 @@ ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
         ngx_epoll_test_rdhup(cycle);
 #endif
     }
-
+    /*预分配events个epoll_event结构event_list */ 
     if (nevents < epcf->events) {
         if (event_list) {
             ngx_free(event_list);
@@ -373,8 +375,10 @@ ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
     ngx_event_actions = ngx_epoll_module_ctx.actions;
 
 #if (NGX_HAVE_CLEAR_EVENT)
+ /* ET模式 */
     ngx_event_flags = NGX_USE_CLEAR_EVENT
 #else
+     /* LT模式 */
     ngx_event_flags = NGX_USE_LEVEL_EVENT
 #endif
                       |NGX_USE_GREEDY_EVENT
@@ -799,11 +803,16 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                    "epoll timer: %M", timer);
-
+     /* 调用epoll_wait在规定的timer时间内等待监控的事件准备就绪 */
     events = epoll_wait(ep, event_list, (int) nevents, timer);
 
     err = (events == -1) ? ngx_errno : 0;
-    //nginx时间更新启动判断逻辑
+        /*
+     * 若没有设置timer_resolution配置项时，
+     * NGX_UPDATE_TIME 标志表示每次调用epoll_wait函数返回后需要更新时间；
+     * 若设置timer_resolution配置项，
+     * 则每隔timer_resolution配置项参数会设置ngx_event_timer_alarm为1，表示需要更新时间；
+     */
     if (flags & NGX_UPDATE_TIME || ngx_event_timer_alarm) {
         ngx_time_update();
     }
@@ -825,7 +834,11 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
         ngx_log_error(level, cycle->log, err, "epoll_wait() failed");
         return NGX_ERROR;
     }
-
+      /*
+     * 若epoll_wait返回的事件数events为0，则有两种可能：
+     * 1、超时返回，即时间超过timer；
+     * 2、在限定的timer时间内返回，此时表示出错error返回；
+     */
     if (events == 0) {
         if (timer != NGX_TIMER_INFINITE) {
             return NGX_OK;
@@ -837,12 +850,20 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
     }
 
     for (i = 0; i < events; i++) {
+          /*
+         * 获取与事件关联的连接对象；
+         * 连接对象地址的最低位保存的是添加事件时设置的事件过期标志位；
+         */
         c = event_list[i].data.ptr;
         instance = (uintptr_t) c & 1;
+        /* 屏蔽连接对象的最低位，即获取连接对象的真正地址 */
         c = (ngx_connection_t *) ((uintptr_t) c & (uintptr_t) ~1);
 
         rev = c->read;
-
+         /*
+         * 同一连接的读写事件的instance标志位是相同的；
+         * 若fd描述符为-1，或连接对象读事件的instance标志位不相同，则判为过期事件；
+         */
         if (c->fd == -1 || rev->instance != instance) {
 
             /*
@@ -860,7 +881,11 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
         ngx_log_debug3(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                        "epoll: fd:%d ev:%04XD d:%p",
                        c->fd, revents, event_list[i].data.ptr);
-
+           /* 记录epoll_wait的错误返回状态 */
+        /*
+         * EPOLLERR表示连接出错；EPOLLHUP表示收到RST报文；
+         * 检测到上面这两种错误时，TCP连接中可能存在未读取的数据；
+         */
         if (revents & (EPOLLERR|EPOLLHUP)) {
             ngx_log_debug2(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                            "epoll_wait() error on fd:%d ev:%04XD",
@@ -881,7 +906,11 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
                           c->fd, revents);
         }
 #endif
-
+           /*
+         * 若连接发生错误且未设置EPOLLIN、EPOLLOUT，
+         * 则将EPOLLIN、EPOLLOUT添加到revents中；
+         * 即在调用读写事件时能够处理连接的错误；
+         */
         if ((revents & EPOLLIN) && rev->active) {
 
 #if (NGX_HAVE_EPOLLRDHUP)
@@ -905,7 +934,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
         }
 
         wev = c->write;
-
+         /* 连接有可写事件，且该写事件是active活跃的 */ 
         if ((revents & EPOLLOUT) && wev->active) {
 
             if (c->fd == -1 || wev->instance != instance) {
@@ -919,12 +948,15 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
                                "epoll: stale event %p", c);
                 continue;
             }
-
+             /* 写事件已准备就绪 */
             wev->ready = 1;
 #if (NGX_THREADS)
             wev->complete = 1;
 #endif
-
+             /*
+             * NGX_POST_EVENTS表示已准备就绪的事件需要延迟处理，
+             * 根据accept标志位将事件加入到相应的队列中；
+             */ 
             if (flags & NGX_POST_EVENTS) {
                 ngx_post_event(wev, &ngx_posted_events);
 

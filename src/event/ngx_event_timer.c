@@ -9,8 +9,9 @@
 #include <ngx_core.h>
 #include <ngx_event.h>
 
-
+/* 所有定时器事件组成的红黑树 */
 ngx_rbtree_t              ngx_event_timer_rbtree;
+/* 红黑树的哨兵节点 */
 static ngx_rbtree_node_t  ngx_event_timer_sentinel;
 
 /*
@@ -45,7 +46,7 @@ ngx_event_find_timer(void)
     node = ngx_rbtree_min(root, sentinel);
 
     timer = (ngx_msec_int_t) (node->key - ngx_current_msec);
-
+    /* 计算最左节点键值与当前时间的差值timer，当timer大于0表示不超时，不大于0表示超时 */ 
     return (ngx_msec_t) (timer > 0 ? timer : 0);
 }
 
@@ -64,7 +65,7 @@ ngx_event_expire_timers(void)
         if (root == sentinel) {
             return;
         }
-
+        //找出红黑树中最小的节点
         node = ngx_rbtree_min(root, sentinel);
 
         /* node->key > ngx_current_msec */
@@ -78,7 +79,7 @@ ngx_event_expire_timers(void)
         ngx_log_debug2(NGX_LOG_DEBUG_EVENT, ev->log, 0,
                        "event timer del: %d: %M",
                        ngx_event_ident(ev->data), ev->timer.key);
-
+        //删除超时事件
         ngx_rbtree_delete(&ngx_event_timer_rbtree, &ev->timer);
 
 #if (NGX_DEBUG)

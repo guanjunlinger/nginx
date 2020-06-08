@@ -80,7 +80,7 @@ ngx_event_add_timer(ngx_event_t *ev, ngx_msec_t timer)
     ngx_log_debug3(NGX_LOG_DEBUG_EVENT, ev->log, 0,
                    "event timer add: %d: %M:%M",
                     ngx_event_ident(ev->data), timer, ev->timer.key);
-
+     /* 将事件对象节点插入到红黑树中 */
     ngx_rbtree_insert(&ngx_event_timer_rbtree, &ev->timer);
 
     ev->timer_set = 1;
