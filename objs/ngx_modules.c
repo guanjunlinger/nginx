@@ -78,17 +78,6 @@ extern ngx_module_t  ngx_stream_upstream_zone_module;
  *    NGX_EVENT_MODULE        ngx_event_module_t 
  *    NGX_HTTP_MODULE         ngx_http_module_t
  *    NGX_STREAM_MODULE       ngx_stream_module_t
- * 
- * 
- * 
- * 模块名                      模块配置结构体
- * ngx_core_module            ngx_core_conf_t
- * ngx_regex_module           ngx_regex_conf_t
- * ngx_event_core_module      ngx_event_conf_t
- * ngx_kqueue_module          ngx_kqueue_conf_t
- * ngx_http_module            ngx_http_conf_ctx_t
- * ngx_stream_module          ngx_stream_conf_ctx_t
- * 
  */ 
 ngx_module_t *ngx_modules[] = {
     &ngx_core_module,

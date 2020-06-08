@@ -133,10 +133,11 @@ struct ngx_http_phase_handler_s {
 
 
 typedef struct {
+    //HTTP阶段处理器列表
     ngx_http_phase_handler_t  *handlers;
-    //NGX_HTTP_SERVER_REWRITE_PHASE,第一个ngx_http_handler_t方法的index
+    //NGX_HTTP_SERVER_REWRITE_PHASE,ngx_http_handler_t方法的index
     ngx_uint_t                 server_rewrite_index;
-    //NGX_HTTP_REWRITE_PHASE阶段第一个ngx_http_handler_t方法的index
+    //NGX_HTTP_REWRITE_PHASE,ngx_http_handler_t方法的index
     ngx_uint_t                 location_rewrite_index;
 } ngx_http_phase_engine_t;
 
@@ -325,7 +326,6 @@ struct ngx_http_core_loc_conf_s {
 
     uint32_t      limit_except;
     void        **limit_except_loc_conf;
-    //HTTP请求处理器
     ngx_http_handler_pt  handler;
 
     /* location name length for inclusive location with inherited alias */

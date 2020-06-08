@@ -81,7 +81,7 @@ static char *ngx_http_client_errors[] = {
 };
 
 
-ngx_http_header_t  ngx_http_headers_in[] = {
+ngx_http_header_t  ngx_http_module_t[] = {
     { ngx_string("Host"), offsetof(ngx_http_headers_in_t, host),
                  ngx_http_process_host },
 
