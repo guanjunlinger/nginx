@@ -804,7 +804,8 @@ ngx_http_handler(ngx_http_request_t *r)
     ngx_http_core_main_conf_t  *cmcf;
 
     r->connection->log->action = NULL;
-
+    
+    /* 若当前请求的internal标志位为0，表示不需要重定向 */
     if (!r->internal) {
         switch (r->headers_in.connection_type) {
         case 0:
@@ -835,7 +836,7 @@ ngx_http_handler(ngx_http_request_t *r)
     r->gzip_ok = 0;
     r->gzip_vary = 0;
 #endif
-
+     /* 设置当前请求写事件的回调方法 */
     r->write_event_handler = ngx_http_core_run_phases;
     ngx_http_core_run_phases(r);
 }
@@ -849,7 +850,7 @@ ngx_http_core_run_phases(ngx_http_request_t *r)
     ngx_http_core_main_conf_t  *cmcf;
 
     cmcf = ngx_http_get_module_main_conf(r, ngx_http_core_module);
-
+    /* 获取各个HTTP模块处理请求的回调方法数组 */
     ph = cmcf->phase_engine.handlers;
     
     while (ph[r->phase_handler].checker) {
@@ -875,19 +876,19 @@ ngx_http_core_generic_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                    "generic phase: %ui", r->phase_handler);
-
+    /* 调用当前阶段各HTTP模块中的handler处理方法 */
     rc = ph->handler(r);
-
+    /* 进入下一阶段处理，忽略当前阶段其他的处理方法 */ 
     if (rc == NGX_OK) {
         r->phase_handler = ph->next;
         return NGX_AGAIN;
     }
-
+    /* 进入下一个处理方法 */
     if (rc == NGX_DECLINED) {
         r->phase_handler++;
         return NGX_AGAIN;
     }
-
+    /* 当前请求依旧处于当前处理阶段 */
     if (rc == NGX_AGAIN || rc == NGX_DONE) {
         return NGX_OK;
     }

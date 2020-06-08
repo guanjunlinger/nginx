@@ -279,17 +279,19 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     for (s = 0; s < cmcf->servers.nelts; s++) {
 
         clcf = cscfp[s]->ctx->loc_conf[ngx_http_core_module.ctx_index];
-
+        /*
+         * 将ngx_http_core_loc_conf_t组成的双向链表按照location匹配字符串进行排序；
+         */   
         if (ngx_http_init_locations(cf, cscfp[s], clcf) != NGX_OK) {
             return NGX_CONF_ERROR;
         }
-
+        /*按照已排序的location{}的双向链表构建静态的二叉查找树 */
         if (ngx_http_init_static_location_trees(cf, clcf) != NGX_OK) {
             return NGX_CONF_ERROR;
         }
     }
 
-    //初始化ngx_http_core_main_conf_t中所有阶段的阶段处理器数组
+     /* 初始化可添加自定义处理方法的7个HTTP阶段的动态数组 */
     if (ngx_http_init_phases(cf, cmcf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
@@ -326,14 +328,14 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     *cf = pcf;
 
-
+     /* 初始化phase_engine_handlers数组 */
     if (ngx_http_init_phase_handlers(cf, cmcf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
 
 
     /* optimize the lists of ports, addresses and server names */
-
+      /* 设置server与监听端口的关系，并设置新连接事件的处理方法 */
     if (ngx_http_optimize_servers(cf, cmcf, cmcf->ports) != NGX_OK) {
         return NGX_CONF_ERROR;
     }

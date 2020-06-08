@@ -300,7 +300,9 @@ typedef struct {
     ngx_buf_t                        *buf;
     off_t                             rest;
     off_t                             received;
+    
     ngx_chain_t                      *free;
+    /* 接收HTTP请求包体缓冲区链表已使用的缓冲区 */
     ngx_chain_t                      *busy;
     ngx_http_chunked_t               *chunked;
     ngx_http_client_body_handler_pt   post_handler;

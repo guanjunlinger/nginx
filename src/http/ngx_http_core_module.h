@@ -126,23 +126,29 @@ typedef ngx_int_t (*ngx_http_phase_handler_pt)(ngx_http_request_t *r,
     ngx_http_phase_handler_t *ph);
 
 struct ngx_http_phase_handler_s {
+     /*
+     * 在HTTP框架中所有的checker方法都由ngx_http_core_module模块实现，其他普通模块不能对其重定义；
+     * 在处理某一个HTTP阶段时，HTTP框架会首先调用checker方法，然后在checker方法里面再调用handler方法；
+     */
     ngx_http_phase_handler_pt  checker;
     ngx_http_handler_pt        handler;
+    /* 下一个将要执行的HTTP阶段 */
     ngx_uint_t                 next;
 };
 
 
 typedef struct {
-    //HTTP阶段处理器列表
+   /* 由ngx_http_phase_handler_t 构成的数组首地址 */
     ngx_http_phase_handler_t  *handlers;
-    //NGX_HTTP_SERVER_REWRITE_PHASE,ngx_http_handler_t方法的index
+      /* 表示NGX_HTTP_SERVER_REWRITE_PHASE阶段第一个ngx_http_phase_handler_pt处理方法在handlers数组中的序号；*/
     ngx_uint_t                 server_rewrite_index;
-    //NGX_HTTP_REWRITE_PHASE,ngx_http_handler_t方法的index
+    /* 表示NGX_HTTP_REWRITE_PHASE阶段第一个ngx_http_phase_handler_pt处理方法在handlers数组中的序号；*/
     ngx_uint_t                 location_rewrite_index;
 } ngx_http_phase_engine_t;
 
 
 typedef struct {
+    /* 保存每一个HTTP模块初始化时添加到当前阶段的处理方法 */
     ngx_array_t                handlers;
 } ngx_http_phase_t;
 
@@ -169,7 +175,10 @@ typedef struct {
     ngx_hash_keys_arrays_t    *variables_keys;
 
     ngx_array_t               *ports;
-
+     /*
+     * 在HTTP模块初始化时，使各HTTP模块在HTTP阶段添加处理方法，
+     * 数组中每一个成员ngx_http_phase_t结构对应一个HTTP阶段；
+     */
     ngx_http_phase_t           phases[NGX_HTTP_LOG_PHASE + 1];
 } ngx_http_core_main_conf_t;
 
@@ -296,6 +305,7 @@ typedef struct {
 
 
 struct ngx_http_core_loc_conf_s {
+    /* location 表达式*/
     ngx_str_t     name;          /* location name */
 
 #if (NGX_PCRE)

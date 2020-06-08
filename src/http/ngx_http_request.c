@@ -381,17 +381,17 @@ ngx_http_wait_request_handler(ngx_event_t *rev)
     ngx_connection_t          *c;
     ngx_http_connection_t     *hc;
     ngx_http_core_srv_conf_t  *cscf;
-
+       /* 获取读事件所对应的连接ngx_connection_t 对象 */ 
     c = rev->data;
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "http wait request handler");
-
+     /* 若当前读事件超时，则记录错误日志，关闭所对应的连接并退出 */
     if (rev->timedout) {
         ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT, "client timed out");
         ngx_http_close_connection(c);
         return;
     }
-
+     /* 若当前读事件所对应的连接设置关闭连接标志位，则关闭该连接 */
     if (c->close) {
         ngx_http_close_connection(c);
         return;
@@ -425,7 +425,7 @@ ngx_http_wait_request_handler(ngx_event_t *rev)
         b->last = b->start;
         b->end = b->last + size;
     }
-
+     /* 在当前连接上开始接收HTTP请求数据 */
     n = c->recv(c, b->last, size);
 
     if (n == NGX_AGAIN) {
@@ -462,7 +462,7 @@ ngx_http_wait_request_handler(ngx_event_t *rev)
         ngx_http_close_connection(c);
         return;
     }
-
+    /* 若接收HTTP请求数据成功，则调整接收缓冲区成员指针 */
     b->last += n;
 
     if (hc->proxy_protocol) {
@@ -489,13 +489,13 @@ ngx_http_wait_request_handler(ngx_event_t *rev)
     c->log->action = "reading client request line";
 
     ngx_reusable_connection(c, 0);
-
+     /* 为当前连接创建一个请求结构体ngx_http_request_t */ 
     c->data = ngx_http_create_request(c);
     if (c->data == NULL) {
         ngx_http_close_connection(c);
         return;
     }
-
+    /* 设置当前读事件的处理方法为ngx_http_process_request_line */
     rev->handler = ngx_http_process_request_line;
     ngx_http_process_request_line(rev);
 }
@@ -1055,7 +1055,7 @@ ngx_http_process_request_line(ngx_event_t *rev)
         ngx_http_close_request(r, NGX_HTTP_REQUEST_TIME_OUT);
         return;
     }
-
+    /* 设置NGX_AGAIN标志，表示请求行还没解析完毕 */
     rc = NGX_AGAIN;
 
     for ( ;; ) {
@@ -2036,7 +2036,12 @@ ngx_http_process_request(ngx_http_request_t *r)
     }
 
 #endif
-
+     /*
+     * 由于现在不需要再接收HTTP请求头部超时问题，
+     * 则需要把当前连接的读事件从定时器机制中删除；
+     * timer_set为1表示读事件已添加到定时器机制中，
+     * 则将其从定时器机制中删除，0表示不在定时器机制中；
+     */
     if (c->read->timer_set) {
         ngx_del_timer(c->read);
     }
@@ -2047,7 +2052,7 @@ ngx_http_process_request(ngx_http_request_t *r)
     (void) ngx_atomic_fetch_add(ngx_stat_writing, 1);
     r->stat_writing = 1;
 #endif
-
+    /* 重新设置当前连接的读、写事件的回调方法 */
     c->read->handler = ngx_http_request_handler;
     c->write->handler = ngx_http_request_handler;
     r->read_event_handler = ngx_http_block_reading;
@@ -2360,20 +2365,21 @@ ngx_http_run_posted_requests(ngx_connection_t *c)
     ngx_http_posted_request_t  *pr;
 
     for ( ;; ) {
-
+        /* 若当前连接已被销毁，则直接退出 */
         if (c->destroyed) {
             return;
         }
 
         r = c->data;
+        /* 获取原始请求的子请求单链表 */
         pr = r->main->posted_requests;
 
         if (pr == NULL) {
             return;
         }
-
+         /* 将原始请求的posted_requests指向单链表的下一个post请求 */
         r->main->posted_requests = pr->next;
-
+        /* 获取子请求链表中的第一个post请求 */
         r = pr->request;
 
         ngx_http_set_log_request(c->log, r);
