@@ -1182,7 +1182,7 @@ ngx_close_connection(ngx_connection_t *c)
         ngx_log_error(NGX_LOG_ALERT, c->log, 0, "connection already closed");
         return;
     }
-
+/* 将当前连接的读、写事件从定时器机制中移除 */
     if (c->read->timer_set) {
         ngx_del_timer(c->read);
     }
@@ -1192,6 +1192,8 @@ ngx_close_connection(ngx_connection_t *c)
     }
 
     if (!c->shared) {
+
+    /* 将当前连接的读、写事件从epoll事件机制中移除 */
         if (ngx_del_conn) {
             ngx_del_conn(c, NGX_CLOSE_EVENT);
 

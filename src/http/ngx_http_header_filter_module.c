@@ -168,13 +168,16 @@ ngx_http_header_filter(ngx_http_request_t *r)
     ngx_http_core_loc_conf_t  *clcf;
     ngx_http_core_srv_conf_t  *cscf;
     u_char                     addr[NGX_SOCKADDR_STRLEN];
-
+      /*
+     * 检查当前请求结构的header_sent标志位，若该标志位为1，
+     * 表示已经发送HTTP请求响应，则无需再发送，此时返回NGX_OK；
+     */
     if (r->header_sent) {
         return NGX_OK;
     }
 
     r->header_sent = 1;
-
+     /* 当前请求不是原始请求，则返回NGX_OK */
     if (r != r->main) {
         return NGX_OK;
     }

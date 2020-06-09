@@ -67,7 +67,12 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
     ll = &r->out;
 
     /* find the size, the flush point and the last link of the saved chain */
-
+    /*
+     * 遍历当前请求out链表缓冲区，计算剩余响应报文的长度；
+     * 因为当响应报文一次性不能发送完成时，会把剩余的响应报文保存在out中，
+     * 相对于本次发送的响应报文数据in来说（即该方法所传入的参数in），
+     * out链表缓冲区保存的是前一次剩余的响应报文；
+     */
     for (cl = r->out; cl; cl = cl->next) {
         ll = &cl->next;
 
@@ -132,7 +137,10 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
     }
 
     /* add the new chain to the existent one */
-
+       /*
+     * 将本次待发送的响应报文的缓冲区in添加到out链表缓冲区的尾部，
+     * 并计算待发送响应报文总的长度size；
+     */ 
     for (ln = in; ln; ln = ln->next) {
         cl = ngx_alloc_chain_link(r->pool);
         if (cl == NULL) {
@@ -189,7 +197,7 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
         }
 
         size += ngx_buf_size(cl->buf);
-
+    
         if (cl->buf->flush || cl->buf->recycled) {
             flush = 1;
         }
@@ -215,11 +223,20 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
      * there are the incoming bufs and the size of all bufs
      * is smaller than "postpone_output" directive
      */
-
+        /*
+     * 若out链表最后一块缓冲区last为空，且没有强制性刷新flush链表缓冲区out，
+     * 且当前有待发响应报文in，但是待发送响应报文总的长度size小于预设可发送条件值postpone_output,
+     * 则本次不能发送响应报文，继续保存在out链表缓冲区中，以待下次才发送；
+     * 其中postpone_output预设值我们可以在配置文件nginx.conf中设置；
+     */
     if (!last && !flush && in && size < (off_t) clcf->postpone_output) {
         return NGX_OK;
     }
-
+       /*
+     * 检查当前连接上写事件的delayed标志位，
+     * 若该标志位为1，表示需要延迟发送响应报文，
+     * 因此，返回NGX_AGAIN，表示延迟发送；
+     */
     if (c->write->delayed) {
         c->buffered |= NGX_HTTP_WRITE_BUFFERED;
         return NGX_AGAIN;
@@ -249,7 +266,10 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
         return NGX_ERROR;
     }
-
+        /*
+     * 检查当前请求的限速标志位limit_rate，
+     * 若该标志位为大于0，表示发送响应报文的速度不能超过limit_rate指定的速度；
+     */
     if (!r->limit_rate_set) {
         r->limit_rate = ngx_http_complex_value_size(r, clcf->limit_rate, 0);
         r->limit_rate_set = 1;
@@ -334,7 +354,7 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
         c->write->delayed = 1;
         ngx_add_timer(c->write, 1);
     }
-
+  /* 重新调整链表缓冲区out的情况，把已发送数据的缓冲区内存回收 */
     for (cl = r->out; cl && cl != chain; /* void */) {
         ln = cl;
         cl = cl->next;
