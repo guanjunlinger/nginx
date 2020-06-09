@@ -542,7 +542,10 @@ ngx_http_discard_request_body(ngx_http_request_t *r)
     ssize_t       size;
     ngx_int_t     rc;
     ngx_event_t  *rev;
-
+  /*
+     * 若当前HTTP请求不是原始请求，或HTTP请求包体已被读取或被丢弃；
+     * 则直接返回NGX_OK；
+     */
     if (r != r->main || r->discard_body || r->request_body) {
         return NGX_OK;
     }
@@ -571,10 +574,14 @@ ngx_http_discard_request_body(ngx_http_request_t *r)
     }
 
     size = r->header_in->last - r->header_in->pos;
-
+    size || r->headers_in.chunked) {
+        /*
+         * 丢弃预接收请求包体数据，并根据预接收请求包体大小与请求content-length头部大小，
+         * 重新计算content_length_n的值；
+         */   
     if (size || r->headers_in.chunked) {
         rc = ngx_http_discard_request_body_filter(r, r->header_in);
-
+         /* 若rc不为NGX_OK表示预接收的请求包体数据不完整，需继续接收 */
         if (rc != NGX_OK) {
             return rc;
         }
@@ -596,13 +603,17 @@ ngx_http_discard_request_body(ngx_http_request_t *r)
     }
 
     /* rc == NGX_AGAIN */
-
+      /*
+     * 若读取到的请求包体依然不完整，但此时已经没有剩余数据可读，
+     * 则将当前请求读事件回调方法设置为ngx_http_discard_request_body_handler，
+     * 并将读事件注册到epoll事件机制中，等待可读事件发生以便继续读取请求包体；
+     */
     r->read_event_handler = ngx_http_discarded_request_body_handler;
-
+  
     if (ngx_handle_read_event(rev, 0) != NGX_OK) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
-
+    /* 由于已将读事件注册到epoll事件机制中，则引用计数增加1，discard_body标志为1 */
     r->count++;
     r->discard_body = 1;
 
@@ -1170,7 +1181,7 @@ ngx_http_request_body_save_filter(ngx_http_request_t *r, ngx_chain_t *in)
     /* rb->rest == 0 */
        /* 若设置将请求包体保存到临时文件，则必须将缓冲区的请求包体数据写入到文件中 */
     if (rb->temp_file || r->request_body_in_file_only) {
-
+           
         if (ngx_http_write_request_body(r) != NGX_OK) {
             return NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
