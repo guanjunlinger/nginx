@@ -36,15 +36,22 @@ ngx_http_read_client_request_body(ngx_http_request_t *r,
     ngx_chain_t                out;
     ngx_http_request_body_t   *rb;
     ngx_http_core_loc_conf_t  *clcf;
-    //增加请求的引用计数
     r->main->count++;
+    /** HTTP请求包体未被处理时，request_body结构是不被分配的，只有处理时才会分配 
 
+     * 若当前HTTP请求不是原始请求，或HTTP请求包体已被读取或被丢弃；
+     * 则直接执行HTTP模块的回调方法post_handler，并返回NGX_OK；
+     */ 
     if (r != r->main || r->request_body || r->discard_body) {
         r->request_body_no_buffering = 0;
         post_handler(r);
         return NGX_OK;
     }
-
+       /*
+     * ngx_http_test_expect 用于检查客户端是否发送Expect:100-continue头部，
+     * 若客户端已发送该头部表示期望发送请求包体数据，则服务器回复HTTP/1.1 100 Continue；
+     * 该函数返回NGX_OK
+     */
     if (ngx_http_test_expect(r) != NGX_OK) {
         rc = NGX_HTTP_INTERNAL_SERVER_ERROR;
         goto done;
@@ -70,7 +77,10 @@ ngx_http_read_client_request_body(ngx_http_request_t *r,
     rb->post_handler = post_handler;
 
     r->request_body = rb;
-
+       /*
+     * 若指定HTTP请求包体的content_length字段小于0，则表示不需要接收包体；
+     * 执行post_handler方法，并返回
+     */
     if (r->headers_in.content_length_n < 0 && !r->headers_in.chunked) {
         r->request_body_no_buffering = 0;
         post_handler(r);
@@ -85,7 +95,10 @@ ngx_http_read_client_request_body(ngx_http_request_t *r,
 #endif
 
     preread = r->header_in->last - r->header_in->pos;
-
+      /*
+     * 若header_in缓冲区存在预接收的HTTP请求包体，
+     * 则计算还需接收HTTP请求包体的大小rest；
+     */ 
     if (preread) {
 
         /* there is the pre-read part of the request body */
@@ -95,13 +108,16 @@ ngx_http_read_client_request_body(ngx_http_request_t *r,
 
         out.buf = r->header_in;
         out.next = NULL;
-
+         /*
+         * 将预接收的HTTP请求包体数据添加到r->request_body->bufs中，
+         * 即将请求包体存储在新分配的ngx_http_request_body_t rb 结构体的bufs中；
+         */
         rc = ngx_http_request_body_filter(r, &out);
 
         if (rc != NGX_OK) {
             goto done;
         }
-
+        /* 更新当前HTTP请求长度：包括请求头部与请求包体 */
         r->request_length += preread - (r->header_in->last - r->header_in->pos);
 
         if (!r->headers_in.chunked
@@ -133,7 +149,7 @@ ngx_http_read_client_request_body(ngx_http_request_t *r,
 
     } else {
         /* set rb->rest */
-
+        
         if (ngx_http_request_body_filter(r, NULL) != NGX_OK) {
             rc = NGX_HTTP_INTERNAL_SERVER_ERROR;
             goto done;
@@ -160,7 +176,11 @@ ngx_http_read_client_request_body(ngx_http_request_t *r,
     size += size >> 2;
 
     /* TODO: honor r->request_body_in_single_buf */
-
+       /*
+         * 若已接收的请求包体不完整，即rest大于0，表示需要继续接收请求包体；
+         * 若此时header_in缓冲区仍然有足够的剩余空间接收剩余的请求包体长度，
+         * 则不再分配缓冲区内存；
+         */ 
     if (!r->headers_in.chunked && rb->rest < size) {
         size = (ssize_t) rb->rest;
 
@@ -180,7 +200,12 @@ ngx_http_read_client_request_body(ngx_http_request_t *r,
 
     r->read_event_handler = ngx_http_read_client_request_body_handler;
     r->write_event_handler = ngx_http_request_empty_handler;
-
+       /*
+             * 真正开始接收请求包体数据
+             * 将TCP套接字连接缓冲区中当前的字符流全部读取出来，
+             * 并判断是否需要写入临时文件，以及是否接收全部的请求包体，
+             * 同时在接收到完整包体后执行回调方法post_handler；
+             */
     rc = ngx_http_do_read_client_request_body(r);
 
 done:
@@ -279,6 +304,7 @@ ngx_http_do_read_client_request_body(ngx_http_request_t *r)
 
     for ( ;; ) {
         for ( ;; ) {
+            /* 若当前缓冲区buf已满 */
             if (rb->buf->last == rb->buf->end) {
 
                 if (rb->buf->pos != rb->buf->last) {
@@ -320,18 +346,19 @@ ngx_http_do_read_client_request_body(ngx_http_request_t *r)
 
                     return NGX_HTTP_INTERNAL_SERVER_ERROR;
                 }
-
+                 /* 由于已经将当前缓冲区的字符流写入到文件，则该缓冲区有空间继续使用 */
                 rb->buf->pos = rb->buf->start;
                 rb->buf->last = rb->buf->start;
             }
 
             size = rb->buf->end - rb->buf->last;
+              /* 计算需要继续接收请求包体的大小rest */
             rest = rb->rest - (rb->buf->last - rb->buf->pos);
 
             if ((off_t) size > rest) {
                 size = (size_t) rest;
             }
-
+            /* 从TCP连接套接字读取请求包体，并保存到当前缓冲区 */
             n = c->recv(c, rb->buf->last, size);
 
             ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
@@ -382,7 +409,10 @@ ngx_http_do_read_client_request_body(ngx_http_request_t *r)
         if (rb->rest == 0) {
             break;
         }
-
+           /*
+         * 若未接接收到完整的HTTP请求包体，且当前连接读事件未准备就绪，
+         * 则需将读事件添加到定时器机制，注册到epoll事件机制中，等待可读事件发生；
+         */
         if (!c->read->ready) {
 
             if (r->request_body_no_buffering
@@ -414,7 +444,7 @@ ngx_http_do_read_client_request_body(ngx_http_request_t *r)
     if (c->read->timer_set) {
         ngx_del_timer(c->read);
     }
-
+    
     if (!r->request_body_no_buffering) {
         r->read_event_handler = ngx_http_block_reading;
         rb->post_handler(r);
@@ -1138,7 +1168,7 @@ ngx_http_request_body_save_filter(ngx_http_request_t *r, ngx_chain_t *in)
     }
 
     /* rb->rest == 0 */
-
+       /* 若设置将请求包体保存到临时文件，则必须将缓冲区的请求包体数据写入到文件中 */
     if (rb->temp_file || r->request_body_in_file_only) {
 
         if (ngx_http_write_request_body(r) != NGX_OK) {
