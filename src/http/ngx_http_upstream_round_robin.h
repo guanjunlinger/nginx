@@ -17,13 +17,15 @@
 typedef struct ngx_http_upstream_rr_peer_s   ngx_http_upstream_rr_peer_t;
 
 struct ngx_http_upstream_rr_peer_s {
+      /* 后端服务器 IP 地址 */
     struct sockaddr                *sockaddr;
     socklen_t                       socklen;
     ngx_str_t                       name;
     ngx_str_t                       server;
-
+     /* 后端服务器当前的权重 */
     ngx_int_t                       current_weight;
     ngx_int_t                       effective_weight;
+    /* 配置项所指定的权重 */
     ngx_int_t                       weight;
 
     ngx_uint_t                      conns;
@@ -59,6 +61,7 @@ struct ngx_http_upstream_rr_peer_s {
 typedef struct ngx_http_upstream_rr_peers_s  ngx_http_upstream_rr_peers_t;
 
 struct ngx_http_upstream_rr_peers_s {
+    /* 竞选队列中后端服务器的数量 */
     ngx_uint_t                      number;
 
 #if (NGX_HTTP_UPSTREAM_ZONE)
@@ -68,12 +71,13 @@ struct ngx_http_upstream_rr_peers_s {
 #endif
 
     ngx_uint_t                      total_weight;
-
+     /* 标志位1，表示后端服务器仅有一台*/
     unsigned                        single:1;
+     /* 标志位1，表示所有后端服务器总的权重等于服务器的数量 */
     unsigned                        weighted:1;
 
     ngx_str_t                      *name;
-
+     /* 后端服务器的链表 */
     ngx_http_upstream_rr_peers_t   *next;
 
     ngx_http_upstream_rr_peer_t    *peer;

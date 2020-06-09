@@ -38,13 +38,13 @@ ngx_http_upstream_init_round_robin(ngx_conf_t *cf,
     ngx_http_upstream_rr_peers_t  *peers, *backup;
 
     us->peer.init = ngx_http_upstream_init_round_robin_peer;
-
+    /*若upstream机制中有配置后端服务器 */
     if (us->servers) {
         server = us->servers->elts;
 
         n = 0;
         w = 0;
-
+        /* 遍历服务器数组中所有后端服务器，统计非备用后端服务器的 IP 地址总个数(即非备用后端服务器总的个数) 和 总权重 */
         for (i = 0; i < us->servers->nelts; i++) {
             if (server[i].backup) {
                 continue;
@@ -79,7 +79,7 @@ ngx_http_upstream_init_round_robin(ngx_conf_t *cf,
 
         n = 0;
         peerp = &peers->peer;
-
+        /* 遍历服务器数组中所有后端服务器，初始化非备用后端服务器 */ 
         for (i = 0; i < us->servers->nelts; i++) {
             if (server[i].backup) {
                 continue;
@@ -103,7 +103,10 @@ ngx_http_upstream_init_round_robin(ngx_conf_t *cf,
                 n++;
             }
         }
-
+    /*
+         * 将非备用服务器列表挂载到 ngx_http_upstream_srv_conf_t 结构体成员结构体
+         * ngx_http_upstream_peer_t peer的成员data中
+         */
         us->peer.data = peers;
 
         /* backup servers */
@@ -267,7 +270,10 @@ ngx_http_upstream_init_round_robin_peer(ngx_http_request_t *r,
     if (rrp->peers->next && rrp->peers->next->number > n) {
         n = rrp->peers->next->number;
     }
-
+    /*
+     * 如果后端服务器数量 n 不大于 32，则只需在一个int中即可记录下所有后端服务器状态；
+     * 如果后端服务器数量 n 大于 32，则需在内存池中申请内存来存储所有后端服务器的状态；
+     */
     if (n <= 8 * sizeof(uintptr_t)) {
         rrp->tried = &rrp->data;
         rrp->data = 0;

@@ -85,14 +85,18 @@ typedef ngx_int_t (*ngx_http_upstream_init_peer_pt)(ngx_http_request_t *r,
 
 
 typedef struct {
+     /* 负载均衡的类型 */
     ngx_http_upstream_init_pt        init_upstream;
+     /* 负载均衡类型的初始化函数 */
     ngx_http_upstream_init_peer_pt   init;
+     /* 指向 ngx_http_upstream_rr_peers_t 结构体 */
     void                            *data;
 } ngx_http_upstream_peer_t;
 
 
 typedef struct {
     ngx_str_t                        name;
+      /* 指向存储 IP 地址的数组,同一个域名可能会有多个 IP 地址 */
     ngx_addr_t                      *addrs;
     ngx_uint_t                       naddrs;
     ngx_uint_t                       weight;
@@ -100,8 +104,9 @@ typedef struct {
     ngx_uint_t                       max_fails;
     time_t                           fail_timeout;
     ngx_msec_t                       slow_start;
+     /* 标志位1,表示不参与策略选择 */
     ngx_uint_t                       down;
-
+     /* 标志位1，表示为备用服务器 */
     unsigned                         backup:1;
 
     NGX_COMPAT_BEGIN(6)

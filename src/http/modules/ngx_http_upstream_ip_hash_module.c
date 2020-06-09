@@ -113,11 +113,11 @@ ngx_http_upstream_init_ip_hash_peer(ngx_http_request_t *r,
     if (ngx_http_upstream_init_round_robin_peer(r, us) != NGX_OK) {
         return NGX_ERROR;
     }
-
+       /* 设置 IP hash 的决策函数  */
     r->upstream->peer.get = ngx_http_upstream_get_ip_hash_peer;
 
     switch (r->connection->sockaddr->sa_family) {
-
+    /* 保存客户端 IP 地址 */
     case AF_INET:
         sin = (struct sockaddr_in *) r->connection->sockaddr;
         iphp->addr = (u_char *) &sin->sin_addr.s_addr;
@@ -162,7 +162,7 @@ ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc, void *data)
     /* TODO: cached */
 
     ngx_http_upstream_rr_peers_rlock(iphp->rrp.peers);
-
+     /* 若重试连接的次数tries大于20或只有一台后端服务器，则直接调用加权轮询策略选择当前后端服务器处理请求*/
     if (iphp->tries > 20 || iphp->rrp.peers->single) {
         ngx_http_upstream_rr_peers_unlock(iphp->rrp.peers);
         return iphp->get_rr_peer(pc, &iphp->rrp);
@@ -176,11 +176,15 @@ ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc, void *data)
     hash = iphp->hash;
 
     for ( ;; ) {
-
+         /* 计算 IP 地址的 hash 值 */
         for (i = 0; i < (ngx_uint_t) iphp->addrlen; i++) {
             hash = (hash * 113 + iphp->addr[i]) % 6271;
         }
-
+         /*
+             * 首先计算hash值与后端服务器总权重的余数w
+             * 将w值减去后端服务器的权重，直到有一个后端服务器使w值小于0，
+             * 则选中该后端服务器来处理请求，并记录在后端服务器列表中的位置p；
+             */
         w = hash % iphp->rrp.peers->total_weight;
         peer = iphp->rrp.peers->peer;
         p = 0;
@@ -190,7 +194,7 @@ ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc, void *data)
             peer = peer->next;
             p++;
         }
-
+        /* 计算被选中后端服务器在位图中的位置*/
         n = p / (8 * sizeof(uintptr_t));
         m = (uintptr_t) 1 << p % (8 * sizeof(uintptr_t));
 
@@ -245,7 +249,7 @@ ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc, void *data)
 
     ngx_http_upstream_rr_peer_unlock(iphp->rrp.peers, peer);
     ngx_http_upstream_rr_peers_unlock(iphp->rrp.peers);
-
+     /* 把当前后端服务器记录在位图中 */
     iphp->rrp.tried[n] |= m;
     iphp->hash = hash;
 
