@@ -12,10 +12,10 @@
 #ifndef _NGX_QUEUE_H_INCLUDED_
 #define _NGX_QUEUE_H_INCLUDED_
 
-
+/* 具有有头节点的双向循环链表 */
 typedef struct ngx_queue_s  ngx_queue_t;
 /**
- * 双向链表
+ * 
  * 使用场景:链表元素的结构体必须包含ngx_queue_t成员
  * 实现了插入排序
  */

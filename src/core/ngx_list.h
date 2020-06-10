@@ -25,10 +25,11 @@ struct ngx_list_part_s {
 
 typedef struct {
     ngx_list_part_t  *last;
+    /* 链表中表头包含的第一个节点 */
     ngx_list_part_t   part;
     //单个数组元素占用的空间
     size_t            size;
-    //数组的容量
+    /* 链表中每个节点所能容纳元素的个数 */
     ngx_uint_t        nalloc;
     ngx_pool_t       *pool;
 } ngx_list_t;

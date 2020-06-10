@@ -14,6 +14,7 @@
 
 
 typedef struct {
+    /* 指向用户自定义的数据 */
     void             *value;
     //key的长度
     u_short           len;
@@ -58,7 +59,6 @@ typedef struct {
     ngx_hash_t       *hash;
     ngx_hash_key_pt   key;
     ngx_uint_t        max_size;
-    //哈希桶的存储空间
     ngx_uint_t        bucket_size;
     char             *name;
     ngx_pool_t       *pool;
