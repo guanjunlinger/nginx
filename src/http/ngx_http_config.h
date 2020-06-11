@@ -36,7 +36,7 @@ typedef struct {
 
 
 #define NGX_HTTP_MODULE           0x50545448   /* "HTTP" */
-
+/* 配置项可以出现在http{}块内    */
 #define NGX_HTTP_MAIN_CONF        0x02000000
 #define NGX_HTTP_SRV_CONF         0x04000000
 #define NGX_HTTP_LOC_CONF         0x08000000

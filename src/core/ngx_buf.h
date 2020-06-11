@@ -18,22 +18,23 @@ typedef void *            ngx_buf_tag_t;
 typedef struct ngx_buf_s  ngx_buf_t;
 
 struct ngx_buf_s {
-    //nginx需要处理的数据范围
+     //待解析的字符流范围
     u_char          *pos;
     u_char          *last;
-    //处理文件的位置信息
+    //待处理的文件字节范围
     off_t            file_pos;
     off_t            file_last;
-    //缓冲区内存的地址信息
+    //待处理的内存范围
     u_char          *start;         /* start of buffer */
     u_char          *end;           /* end of buffer */
-    //缓冲区类型
+    /*缓冲区类型   表示当前缓冲区的类型,指向模块ngx_module_t变量*/
     ngx_buf_tag_t    tag;
     ngx_file_t      *file;
     ngx_buf_t       *shadow;
 
 
     /* the buf's content could be changed */
+    /* buf缓冲区由用户创建，并且可以被filter变更   */
     unsigned         temporary:1;
 
     /*
@@ -46,19 +47,24 @@ struct ngx_buf_s {
     unsigned         mmap:1;
 
     unsigned         recycled:1;
+    /*  包含内容在文件中*/
     unsigned         in_file:1;
+    /*  立即发送缓冲的所有数据 */
     unsigned         flush:1;
+    /*  缓冲区时是否使用同步方式 */
     unsigned         sync:1;
+    /* 最后一块缓冲区标志位 */
     unsigned         last_buf:1;
+    /* 在当前的chain里面,buf是最后一个*/
     unsigned         last_in_chain:1;
 
     unsigned         last_shadow:1;
+    /*  缓冲区内容在临时文件中*/
     unsigned         temp_file:1;
 
     /* STUB */ int   num;
 };
 
-//元素是ngx_buf_t的单链表
 struct ngx_chain_s {
     ngx_buf_t    *buf;
     ngx_chain_t  *next;
@@ -80,8 +86,11 @@ typedef void (*ngx_output_chain_aio_pt)(ngx_output_chain_ctx_t *ctx,
 
 struct ngx_output_chain_ctx_s {
     ngx_buf_t                   *buf;
+    /*  待发送的数据 */
     ngx_chain_t                 *in;
+     /*  已发送的数据 */
     ngx_chain_t                 *free;
+    /*  调用ngx_chain_writer,还未发送完毕的数据*/
     ngx_chain_t                 *busy;
 
     unsigned                     sendfile:1;

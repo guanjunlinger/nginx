@@ -29,7 +29,7 @@
 #define NGX_CONF_TAKE7       0x00000080
 
 #define NGX_CONF_MAX_ARGS    8
-
+/*  配置项可以携带1个参数或2个参数   */ 
 #define NGX_CONF_TAKE12      (NGX_CONF_TAKE1|NGX_CONF_TAKE2)
 #define NGX_CONF_TAKE13      (NGX_CONF_TAKE1|NGX_CONF_TAKE3)
 
@@ -40,6 +40,7 @@
                               |NGX_CONF_TAKE4)
 
 #define NGX_CONF_ARGS_NUMBER 0x000000ff
+/*  配置项定义了一种新的{}块 */
 #define NGX_CONF_BLOCK       0x00000100
 //配置项携带参数只有一个参数,取值on|off
 #define NGX_CONF_FLAG        0x00000200
@@ -47,12 +48,10 @@
 #define NGX_CONF_1MORE       0x00000800
 #define NGX_CONF_2MORE       0x00001000
 
-//标志配置结构体已经创建
 #define NGX_DIRECT_CONF      0x00010000
 
-//单独出现表示配置结构体还未创建
 #define NGX_MAIN_CONF        0x01000000
-//该指令可以出现在任意配置级别上
+
 #define NGX_ANY_CONF         0xFF000000
 
 
@@ -81,7 +80,7 @@
 struct ngx_command_s {
     //配置项名称
     ngx_str_t             name;
-    //配置项可以出现的位置,参数数目和配置结构体是否创建
+    //配置项可以出现的位置和参数数量
     ngx_uint_t            type;
     //配置项处理器
     char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
