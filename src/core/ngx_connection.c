@@ -539,7 +539,7 @@ ngx_open_listening_sockets(ngx_cycle_t *cycle)
                 }
 
 #else
-
+                /* SO_REUSEADDR用于对TCP套接字处于TIME_WAIT状态下的socket 重复绑定使用 */
                 if (setsockopt(s, SOL_SOCKET, SO_REUSEPORT,
                                (const void *) &reuseport, sizeof(int))
                     == -1)

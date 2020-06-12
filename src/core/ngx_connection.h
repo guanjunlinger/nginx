@@ -21,6 +21,7 @@ struct ngx_listening_s {
     struct sockaddr    *sockaddr;
     socklen_t           socklen;    /* size of sockaddr */
     size_t              addr_text_max_len;
+    /*  字符串形式存储IP地址和端口 */
     ngx_str_t           addr_text;
     //套接字类型
     int                 type;
@@ -49,7 +50,7 @@ struct ngx_listening_s {
       TCP_DEFER_ACCEPT选项的超时时间
     */
     ngx_msec_t          post_accept_timeout;
-
+    /* 热启动nginx进程的时候，在最新启动前的上一个nginx的所有listen信息 */
     ngx_listening_t    *previous;
     ngx_connection_t   *connection;
 
@@ -57,14 +58,17 @@ struct ngx_listening_s {
     ngx_rbtree_node_t   sentinel;
 
     ngx_uint_t          worker;
-
+    /* 当前监听句柄有效标志位 */
     unsigned            open:1;
+    /*  不关闭原先打开的监听端口 */
     unsigned            remain:1;
+    /*  跳过当前ngx_listening_t结构体中的套接字*/
     unsigned            ignore:1;
 
     unsigned            bound:1;       /* already bound */
     unsigned            inherited:1;   /* inherited from previous process */
     unsigned            nonblocking_accept:1;
+    /*  套接字监听状态标志位 */
     unsigned            listen:1;
     unsigned            nonblocking:1;
     unsigned            shared:1;    /* shared between threads or processes */
@@ -176,10 +180,12 @@ struct ngx_connection_s {
 
     unsigned            timedout:1;
     unsigned            error:1;
+    /* 连接销毁标志位  */
     unsigned            destroyed:1;
-
+    /*  连接空闲状态标志位 */  
     unsigned            idle:1;
     unsigned            reusable:1;
+    /*  连接关闭标志位*/
     unsigned            close:1;
     unsigned            shared:1;
 
