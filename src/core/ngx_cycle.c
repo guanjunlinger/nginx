@@ -411,7 +411,6 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
 
     /* create shared memory
-      处理全局的共享内存
      */
 
     part = &cycle->shared_memory.part;
@@ -1296,7 +1295,7 @@ ngx_shared_memory_add(ngx_conf_t *cf, ngx_str_t *name, size_t size, void *tag)
     shm_zone = part->elts;
 
     for (i = 0; /* void */ ; i++) {
-
+        /* 遍历首元素时,初始化shm_zone指针   */
         if (i >= part->nelts) {
             if (part->next == NULL) {
                 break;
@@ -1305,7 +1304,7 @@ ngx_shared_memory_add(ngx_conf_t *cf, ngx_str_t *name, size_t size, void *tag)
             shm_zone = part->elts;
             i = 0;
         }
-
+        /*  检测共享内存的名称  */ 
         if (name->len != shm_zone[i].shm.name.len) {
             continue;
         }
@@ -1327,7 +1326,7 @@ ngx_shared_memory_add(ngx_conf_t *cf, ngx_str_t *name, size_t size, void *tag)
         if (shm_zone[i].shm.size == 0) {
             shm_zone[i].shm.size = size;
         }
-
+        /*   检测共享内存的大小    */
         if (size && size != shm_zone[i].shm.size) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
                             "the size %uz of shared memory zone \"%V\" "

@@ -29,7 +29,9 @@ typedef ngx_int_t (*ngx_shm_zone_init_pt) (ngx_shm_zone_t *zone, void *data);
 struct ngx_shm_zone_s {
     void                     *data;
     ngx_shm_t                 shm;
+    /*  共享内存的初始化方法 */
     ngx_shm_zone_init_pt      init;
+    /*  共享内存所属的模块 */
     void                     *tag;
     void                     *sync;
     ngx_uint_t                noreuse;  /* unsigned  noreuse:1; */
@@ -68,7 +70,7 @@ struct ngx_cycle_s {
 
     ngx_uint_t                connection_n;
     ngx_uint_t                files_n;
-
+    /* 在connections指向的连接池中,每个连接所需要的读/写事件都以相同的数组序号对应着read_events、write_events读/写事件数组， */ 
     ngx_connection_t         *connections;
     ngx_event_t              *read_events;
     ngx_event_t              *write_events;
@@ -112,7 +114,6 @@ typedef struct {
 
     ngx_str_t                 working_directory;
     ngx_str_t                 lock_file;
-
     ngx_str_t                 pid;
     ngx_str_t                 oldpid;
 
