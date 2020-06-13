@@ -98,8 +98,9 @@ typedef struct {
 
     socklen_t                 socklen;
     ngx_sockaddr_t            sockaddr;
-
+    //IP地址的数组
     ngx_addr_t               *addrs;
+    //IP地址的数目
     ngx_uint_t                naddrs;
 
     char                     *err;

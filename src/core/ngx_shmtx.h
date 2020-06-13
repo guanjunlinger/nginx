@@ -36,7 +36,6 @@ typedef struct {
     ngx_fd_t       fd;
     u_char        *name;
 #endif
-    //自旋次数
     ngx_uint_t     spin;
 } ngx_shmtx_t;
 

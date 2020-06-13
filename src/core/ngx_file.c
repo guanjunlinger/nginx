@@ -236,7 +236,9 @@ ngx_create_temp_file(ngx_file_t *file, ngx_path_t *path, ngx_pool_t *pool,
     }
 }
 
-
+/*
+根据md5值过来的后面的位数定义文件夹
+*/
 void
 ngx_create_hashed_filename(ngx_path_t *path, u_char *file, size_t len)
 {
@@ -246,7 +248,6 @@ ngx_create_hashed_filename(ngx_path_t *path, u_char *file, size_t len)
     i = path->name.len + 1;
 
     file[path->name.len + path->len]  = '/';
-
     for (n = 0; n < NGX_MAX_PATH_LEVEL; n++) {
         level = path->level[n];
 
@@ -343,7 +344,7 @@ ngx_create_full_path(u_char *dir, ngx_uint_t access)
     return err;
 }
 
-
+//全局ID生成器
 ngx_atomic_uint_t
 ngx_next_temp_number(ngx_uint_t collision)
 {
@@ -942,6 +943,9 @@ failed:
  * on fatal (memory) error handler must return NGX_ABORT to stop walking tree
  */
 
+/*
+递归遍历缓存目录，并对不同类型的文件根据回调函数做不同的处理
+*/
 ngx_int_t
 ngx_walk_tree(ngx_tree_ctx_t *ctx, ngx_str_t *tree)
 {

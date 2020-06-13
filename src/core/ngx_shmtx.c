@@ -19,11 +19,11 @@ ngx_int_t
 ngx_shmtx_create(ngx_shmtx_t *mtx, ngx_shmtx_sh_t *addr, u_char *name)
 {
     mtx->lock = &addr->lock;
-
+    //禁止使用信号量
     if (mtx->spin == (ngx_uint_t) -1) {
         return NGX_OK;
     }
-
+    //默认自旋次数
     mtx->spin = 2048;
 
 #if (NGX_HAVE_POSIX_SEM)
@@ -78,11 +78,11 @@ ngx_shmtx_lock(ngx_shmtx_t *mtx)
         if (*mtx->lock == 0 && ngx_atomic_cmp_set(mtx->lock, 0, ngx_pid)) {
             return;
         }
-
+ 
         if (ngx_ncpu > 1) {
 
             for (n = 1; n < mtx->spin; n <<= 1) {
-
+                //设置CAS失败的重试间隔
                 for (i = 0; i < n; i++) {
                     ngx_cpu_pause();
                 }
@@ -127,12 +127,14 @@ ngx_shmtx_lock(ngx_shmtx_t *mtx)
         }
 
 #endif
-
+        //不使用信号量时,进程休眠
         ngx_sched_yield();
     }
 }
 
-
+/**
+ * lock域记录锁的持有者,即进程PID
+ */ 
 void
 ngx_shmtx_unlock(ngx_shmtx_t *mtx)
 {

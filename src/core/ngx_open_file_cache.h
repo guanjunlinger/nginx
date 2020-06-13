@@ -18,6 +18,7 @@
 
 typedef struct {
     ngx_fd_t                 fd;
+    /* 文件inode节点号 */
     ngx_file_uniq_t          uniq;
     time_t                   mtime;
     off_t                    size;
@@ -66,7 +67,7 @@ struct ngx_cached_open_file_s {
     time_t                   mtime;
     off_t                    size;
     ngx_err_t                err;
-
+        /* ngx_open_cached_file->ngx_open_file_lookup每次查找到该文件，则增加1 */
     uint32_t                 uses;
 
 #if (NGX_HAVE_OPENAT)
@@ -89,11 +90,14 @@ struct ngx_cached_open_file_s {
 
 
 typedef struct {
+    /* rbtree红黑树和expire_queue队列中包含的是同样的元素 */
     ngx_rbtree_t             rbtree;
     ngx_rbtree_node_t        sentinel;
+    /* 快速淘汰过期元素 */
     ngx_queue_t              expire_queue;
-
+    /* 红黑树和expire_queue队列中成员node个数  */
     ngx_uint_t               current;
+    /*   open_file_cache 配置项  */
     ngx_uint_t               max;
     time_t                   inactive;
 } ngx_open_file_cache_t;

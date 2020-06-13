@@ -18,7 +18,7 @@ typedef struct {
     void             *value;
     //key的长度
     u_short           len;
-    //key的首地址
+    //key的首地址,name特别短的时候,节约内存
     u_char            name[1];
 } ngx_hash_elt_t;
 

@@ -17,7 +17,7 @@ struct ngx_file_s {
     //文件描述符
     ngx_fd_t                   fd;
     ngx_str_t                  name;
-    //Linux 定义的stat结构体
+    //文件元信息
     ngx_file_info_t            info;
 
     off_t                      offset;
